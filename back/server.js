@@ -131,6 +131,14 @@ function releaseRole(ws) {
 
 function checkMovePermission(ws, procedure) {
   const role = clientRoles.get(ws) ?? 0;
+  const wsOwnsAtLeastOnePlayer = playerOwners[1] === ws || playerOwners[2] === ws;
+  const secondSeatIsFree = !playerOwners[1] || !playerOwners[2];
+
+  // Удобный локальный режим: если в матче только один реальный игрок,
+  // разрешаем ему управлять обоими персонажами (стрелки + WASD).
+  if (wsOwnsAtLeastOnePlayer && secondSeatIsFree) {
+    return;
+  }
 
   if (player1Methods.has(procedure) && role !== 1) {
     throw new Error("Эта вкладка не управляет Player 1");

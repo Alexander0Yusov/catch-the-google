@@ -6,6 +6,7 @@ const pointsToWinSelect = document.querySelector("#points-to-win-select");
 const timeSelect = document.querySelector("#time-select");
 const playerRoleSelect = document.querySelector("#player-role-select");
 const startButton = document.querySelector("#start-game-button");
+const resetButton = document.querySelector("#reset-game-button");
 const soundToggle = document.querySelector("#sound-toggle");
 const catchValue = document.querySelector("#catch-value");
 const enemyValue = document.querySelector("#enemy-value");
@@ -161,26 +162,18 @@ const restartGame = async () => {
   startTimer();
 };
 
-const moveByRole = async (code) => {
-  const myPlayerId = Number(playerRoleSelect.value);
-  if (myPlayerId === 0) {
-    return;
-  }
+const moveByKeys = async (code) => {
+  // Стрелки всегда двигают Player 1.
+  if (code === "ArrowUp") await game.movePlayer1Up();
+  if (code === "ArrowDown") await game.movePlayer1Down();
+  if (code === "ArrowLeft") await game.movePlayer1Left();
+  if (code === "ArrowRight") await game.movePlayer1Right();
 
-  if (myPlayerId === 1) {
-    if (code === "ArrowUp") await game.movePlayer1Up();
-    if (code === "ArrowDown") await game.movePlayer1Down();
-    if (code === "ArrowLeft") await game.movePlayer1Left();
-    if (code === "ArrowRight") await game.movePlayer1Right();
-    return;
-  }
-
-  if (myPlayerId === 2) {
-    if (code === "ArrowUp") await game.movePlayer2Up();
-    if (code === "ArrowDown") await game.movePlayer2Down();
-    if (code === "ArrowLeft") await game.movePlayer2Left();
-    if (code === "ArrowRight") await game.movePlayer2Right();
-  }
+  // WASD всегда двигают Player 2.
+  if (code === "KeyW") await game.movePlayer2Up();
+  if (code === "KeyS") await game.movePlayer2Down();
+  if (code === "KeyA") await game.movePlayer2Left();
+  if (code === "KeyD") await game.movePlayer2Right();
 };
 
 const bootstrap = async () => {
@@ -204,19 +197,29 @@ const bootstrap = async () => {
   });
 
   window.addEventListener("keydown", async (event) => {
-    const arrowKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
-    if (!arrowKeys.includes(event.code)) {
+    const movementKeys = [
+      "ArrowUp",
+      "ArrowDown",
+      "ArrowLeft",
+      "ArrowRight",
+      "KeyW",
+      "KeyA",
+      "KeyS",
+      "KeyD",
+    ];
+
+    if (!movementKeys.includes(event.code)) {
       return;
     }
 
-    // Блокируем нативный скролл страницы по стрелкам во время матча.
+    // Блокируем нативный скролл страницы во время управления.
     event.preventDefault();
 
     if (game.state.status !== "in-progress") {
       return;
     }
 
-    await moveByRole(event.code);
+    await moveByKeys(event.code);
   });
 
   eventEmitter.on("change", (state) => {
@@ -235,6 +238,10 @@ const bootstrap = async () => {
   await render();
 
   startButton.addEventListener("click", async () => {
+    await restartGame();
+  });
+
+  resetButton.addEventListener("click", async () => {
     await restartGame();
   });
 };
