@@ -28,6 +28,8 @@ If your backend URL is different, update [config.js](./config.js).
 - Catching Google gives `+1` point.
 - After catch, Google relocates to a new valid cell.
 - If nobody catches Google for `googleJumpInterval`, it jumps automatically.
+- Turn order: `Player 1` moves first, then `Player 2`, then alternates.
+- Delay between turns is configurable via `turnDelayMs` (default `250ms`).
 - The match ends when:
   - someone reaches `pointsToWin`, or
   - `gameDurationMs` expires.
@@ -121,6 +123,7 @@ erDiagram
 - Realtime: WebSocket (`ws`)
 - Patterns: MVC (lightweight), Observer, Remote Proxy
 - Database: PostgreSQL (Neon), `pg`
+- Testing: `Vitest` (unit/integration/e2e), `ws` (e2e client)
 - Deployment: GitHub Pages + Render
 
 ## 4) Why GitHub Pages + Render + Deployment Guide
@@ -148,5 +151,28 @@ Add your media files to `docs/screenshots/`:
 - `gameplay-start.png`
 - `gameplay-win.png`
 - `gameplay.gif`
+
+## Tests
+
+### Run
+
+```bash
+npm test
+npm run test:unit
+npm run test:integration
+npm run test:e2e
+```
+
+### Covered cases
+
+- `Unit`:
+  - `Position.clone/equal` behavior.
+  - `EventEmitter` subscribe/emit/unsubscribe.
+- `Integration`:
+  - `Game.start` creates valid unique unit positions.
+  - Turn order + `turnDelayMs` enforcement.
+- `E2E`:
+  - Start game via WebSocket request/response protocol.
+  - Distinct role assignment for two clients.
 
 Then they will render in the Russian README.

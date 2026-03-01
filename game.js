@@ -14,6 +14,8 @@ export class Game {
     },
     googleJumpInterval: 2000,
     gameDurationMs: 120000,
+    firstTurnPlayerId: 1,
+    turnDelayMs: 250,
   };
 
   #player1;
@@ -29,6 +31,8 @@ export class Game {
   #finishTimeoutId;
   #startedAt;
   #sessionId;
+  #currentTurnPlayerId = 1;
+  #lastTurnAtMs = 0;
 
   constructor(eventEmitter) {
     this.eventEmitter = eventEmitter;
@@ -81,6 +85,7 @@ export class Game {
       this.#startedAt = Date.now();
       this.#runGoogleJumpInterval();
       this.#runFinishTimeout(this.#settings.gameDurationMs);
+      this.#resetTurnFlow();
     }
 
     this.#emitChange();
@@ -122,6 +127,7 @@ export class Game {
       startedAt: this.#startedAt,
       remainingTimeMs: this.#getRemainingTimeMs(),
       sessionId: this.#sessionId,
+      currentTurnPlayerId: this.#currentTurnPlayerId,
     };
   }
 
@@ -148,6 +154,7 @@ export class Game {
 
     this.#runGoogleJumpInterval();
     this.#runFinishTimeout(this.#settings.gameDurationMs);
+    this.#resetTurnFlow();
 
     this.#emitChange();
     return this.getSnapshot();
@@ -224,6 +231,10 @@ export class Game {
       return;
     }
 
+    if (!this.#canMoveByTurnRules(movingPlayer.id)) {
+      return;
+    }
+
     const isBorder = this.#checkBorders(movingPlayer, delta);
     const isAnotherPlayer = this.#checkOtherPlayer(
       movingPlayer,
@@ -250,6 +261,7 @@ export class Game {
     }
 
     this.#checkGoogleCatching(movingPlayer);
+    this.#registerTurn(anotherPlayer.id);
     this.#emitChange();
   }
 
@@ -455,7 +467,27 @@ export class Game {
       settings: this.#settings,
       remainingTimeMs: this.#getRemainingTimeMs(),
       sessionId: this.#sessionId,
+      currentTurnPlayerId: this.#currentTurnPlayerId,
     });
+  }
+
+  #resetTurnFlow() {
+    this.#currentTurnPlayerId = this.#settings.firstTurnPlayerId;
+    this.#lastTurnAtMs = 0;
+  }
+
+  #canMoveByTurnRules(playerId) {
+    if (this.#currentTurnPlayerId !== playerId) {
+      return false;
+    }
+
+    const elapsedMs = Date.now() - this.#lastTurnAtMs;
+    return elapsedMs >= this.#settings.turnDelayMs;
+  }
+
+  #registerTurn(nextPlayerId) {
+    this.#lastTurnAtMs = Date.now();
+    this.#currentTurnPlayerId = nextPlayerId;
   }
 }
 
