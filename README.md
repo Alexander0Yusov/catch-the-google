@@ -338,3 +338,7 @@ window.GAME_WS_URL = "wss://<your-render-service>.onrender.com";
 ### Gameplay win state
 
 `./docs/screenshots/gameplay-win.png`
+
+### Gameplay (main)
+
+`./docs/screenshots/gameplay.png`
