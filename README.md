@@ -226,8 +226,10 @@ erDiagram
 | 8 | request | Front -> Back | `procedure: "stop"` | останавливает матч | `response { result: snapshot }` |
 
 Документация протокола:
-- HTTP/OpenAPI: [openapi.yaml](./docs/api/openapi.yaml)
-- WebSocket/AsyncAPI: [asyncapi.yaml](./docs/api/asyncapi.yaml)
+- HTTP docs UI: `GET /api-docs` (Render: https://catch-the-google-backend.onrender.com/api-docs)
+- WebSocket docs UI: `GET /ws-docs` (Render: https://catch-the-google-backend.onrender.com/ws-docs)
+- HTTP/OpenAPI spec: [openapi.yaml](./docs/api/openapi.yaml)
+- WebSocket/AsyncAPI spec: [asyncapi.yaml](./docs/api/asyncapi.yaml)
 
 ---
 

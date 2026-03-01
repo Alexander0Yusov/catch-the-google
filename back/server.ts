@@ -9,6 +9,8 @@
  * 3) Ошибки в этой точке ломают live-игру (кнопки на фронте перестают работать).
  */
 import http from "node:http";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocket, WebSocketServer } from "ws";
 import { Game } from "../game.js";
@@ -17,6 +19,8 @@ import { GameDb } from "./db.js";
 
 export async function createGameServer(options = {}) {
   const port = Number(options.port ?? process.env.PORT ?? 3001);
+  const openApiPath = path.resolve(process.cwd(), "docs", "api", "openapi.yaml");
+  const asyncApiPath = path.resolve(process.cwd(), "docs", "api", "asyncapi.yaml");
 
   const eventEmitter = new EventEmitter();
   const game = new Game(eventEmitter);
@@ -27,6 +31,88 @@ export async function createGameServer(options = {}) {
     if (req.url === "/health") {
       res.writeHead(200, { "content-type": "application/json; charset=utf-8" });
       res.end(JSON.stringify({ ok: true, service: "catch-the-google-backend" }));
+      return;
+    }
+
+    // HTTP-документация доступна прямо с deployed backend URL.
+    if (req.url === "/api-docs") {
+      const html = `<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catch The Google API Docs</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  </head>
+  <body style="margin:0;background:#0f172a;">
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <script>
+      window.ui = SwaggerUIBundle({
+        url: "/api-docs/openapi.yaml",
+        dom_id: "#swagger-ui",
+      });
+    </script>
+  </body>
+</html>`;
+
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      res.end(html);
+      return;
+    }
+
+    if (req.url === "/api-docs/openapi.yaml") {
+      readFile(openApiPath, "utf8")
+        .then((content) => {
+          res.writeHead(200, { "content-type": "application/yaml; charset=utf-8" });
+          res.end(content);
+        })
+        .catch(() => {
+          res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+          res.end("openapi.yaml not found");
+        });
+      return;
+    }
+
+    if (req.url === "/ws-docs") {
+      const html = `<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catch The Google WS Docs</title>
+    <style>
+      body { margin: 0; font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; }
+      main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+      h1 { margin-top: 0; }
+      a { color: #67e8f9; }
+      iframe { width: 100%; min-height: 70vh; border: 1px solid #334155; background: #020617; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>WebSocket / AsyncAPI docs</h1>
+      <p>Raw spec: <a href="/ws-docs/asyncapi.yaml" target="_blank" rel="noreferrer">/ws-docs/asyncapi.yaml</a></p>
+      <iframe src="/ws-docs/asyncapi.yaml" title="AsyncAPI YAML"></iframe>
+    </main>
+  </body>
+</html>`;
+
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      res.end(html);
+      return;
+    }
+
+    if (req.url === "/ws-docs/asyncapi.yaml") {
+      readFile(asyncApiPath, "utf8")
+        .then((content) => {
+          res.writeHead(200, { "content-type": "application/yaml; charset=utf-8" });
+          res.end(content);
+        })
+        .catch(() => {
+          res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+          res.end("asyncapi.yaml not found");
+        });
       return;
     }
 
