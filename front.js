@@ -27,11 +27,17 @@ const playerIcons = {
     player2: "./img/icons/man02.svg",
 };
 /**
- * Тихая нейтральная фоновая музыка без аудиофайлов:
- * генерируем мягкую синусоиду и медленно меняем ноты.
- * Это безопасно для деплоя на GitHub Pages — не нужны дополнительные ассеты.
+ * Аудио-стратегия:
+ * 1) Пытаемся проиграть локальный файл ./assets/audio/get-low.mp3 на тихой громкости.
+ * 2) Если файл недоступен/заблокирован, fallback на синтезированный ambient tone.
+ *
+ * Это безопасно для деплоя: сайт не ломается без аудиофайла.
  */
 const createAmbientAudio = () => {
+    const audio = new Audio("./assets/audio/get-low.mp3");
+    audio.loop = true;
+    audio.volume = 0.08;
+    audio.preload = "none";
     const context = new AudioContext();
     const gain = context.createGain();
     gain.gain.value = 0.02;
@@ -41,6 +47,17 @@ const createAmbientAudio = () => {
     let intervalId = null;
     const notes = [220, 246.94, 261.63, 293.66];
     const start = async () => {
+        let fileStarted = false;
+        try {
+            await audio.play();
+            fileStarted = true;
+        }
+        catch {
+            fileStarted = false;
+        }
+        if (fileStarted) {
+            return;
+        }
         if (context.state === "suspended") {
             await context.resume();
         }
@@ -61,6 +78,8 @@ const createAmbientAudio = () => {
         }
     };
     const stop = () => {
+        audio.pause();
+        audio.currentTime = 0;
         if (intervalId) {
             clearInterval(intervalId);
             intervalId = null;

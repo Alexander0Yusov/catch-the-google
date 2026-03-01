@@ -116,18 +116,46 @@ erDiagram
   game_sessions_2 ||--o{ scores_2 : session_token
 ```
 
-## 3) Technology Stack
+## 3) Frontend ↔ Backend Flow Table
+
+The game protocol is WebSocket-first. HTTP is used only for health-check.
+
+### HTTP
+
+| Step | Method/Path | Sender | Payload | Response |
+|---|---|---|---|---|
+| 1 | `GET /health` | Render health-check / browser | none | `{ ok: true, service: "catch-the-google-backend" }` |
+
+### WebSocket
+
+| Order | Channel | From -> To | Message | Server action | Response |
+|---|---|---|---|---|---|
+| 1 | WS connect | Front -> Back | handshake | register connection | `event(change)` with snapshot |
+| 2 | request | Front -> Back | `procedure: joinGame` | assign role | `response { result: { playerId } }` |
+| 3 | request | Front -> Back | `procedure: setSettings` | update match settings | `response { result: snapshot }` |
+| 4 | request | Front -> Back | `procedure: start` | create units, start timers | `response { result: snapshot }` |
+| 5 | request | Front -> Back | `procedure: movePlayer...` | validate + apply move | `response { result: snapshot }` |
+| 6 | event | Back -> Front(all) | `eventName: change` | broadcast state | UI rerender |
+| 7 | event | Back -> Front(all) | `eventName: googleCaught/finished` | domain event broadcast | score/modal update |
+| 8 | request | Front -> Back | `procedure: stop` | stop match | `response { result: snapshot }` |
+
+Protocol docs:
+- HTTP/OpenAPI: [openapi.yaml](./docs/api/openapi.yaml)
+- WebSocket/AsyncAPI: [asyncapi.yaml](./docs/api/asyncapi.yaml)
+
+## 4) Technology Stack
 
 - Frontend/Core language: TypeScript sources (`.ts`) + generated `.js` for deployment runtime
 - Backend: Node.js runtime + TypeScript sources
 - Realtime: WebSocket (`ws`)
 - Patterns: MVC (lightweight), Observer, Remote Proxy
 - Database: PostgreSQL (Neon), `pg`
+- Code quality: ESLint (TS + JS)
 - Testing: `Vitest` (unit/integration/e2e), `ws` (e2e client)
-- Audio: Web Audio API (quiet neutral loop controlled by `Sound on` switch)
+- Audio: `get-low.mp3` (low volume) + Web Audio fallback when file is unavailable
 - Deployment: GitHub Pages + Render
 
-## 4) Why GitHub Pages + Render + Deployment Guide
+## 5) Why GitHub Pages + Render + Deployment Guide
 
 ### Why this setup
 
@@ -177,4 +205,22 @@ npm run test:e2e
   - Start game via WebSocket request/response protocol.
   - Distinct role assignment for two clients.
 
-Then they will render in the Russian README.
+## Linting Rules (Why)
+
+### Commands
+
+```bash
+npm run lint
+npm run lint:fix
+npm run check:migrations
+```
+
+### Rule intent
+
+| Rule | Why it matters |
+|---|---|
+| `eqeqeq` | prevents implicit coercion in game logic |
+| `@typescript-eslint/no-unused-vars` | removes dead code paths and noisy parameters |
+| `import/order` | stable imports = easier diff review and fewer merge conflicts |
+| `@typescript-eslint/consistent-type-imports` | cleaner TS imports and better long-term maintainability |
+| `no-console` = off (intentional) | production/runtime diagnostics are required for Render/WebSocket debugging |

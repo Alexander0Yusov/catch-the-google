@@ -1,4 +1,3 @@
-// @ts-nocheck
 export class EventEmitter {
     #subscribers = {};
     addEventListener(eventName, callback) {

@@ -1,14 +1,15 @@
-﻿// @ts-nocheck
+﻿import { Position } from "./Position.js";
+
 export class Unit {
-  constructor(position) {
+  position: Position;
+
+  constructor(position: Position) {
     this.position = position;
   }
 
-  toJSON() {
+  toJSON(): { position: Position } {
     return {
       position: this.position,
     };
   }
 }
-
-

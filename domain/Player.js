@@ -1,6 +1,6 @@
-// @ts-nocheck
 import { Unit } from "./Unit.js";
 export class Player extends Unit {
+    id;
     constructor(id, position) {
         super(position);
         this.id = id;

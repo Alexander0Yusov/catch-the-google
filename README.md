@@ -202,22 +202,51 @@ erDiagram
 
 ---
 
-## 3) Стек технологий
+## 3) Флоу Frontend ↔ Backend
 
-- **Frontend**: HTML, CSS, Vanilla JS (ES Modules)
-- **Frontend/Core language**: TypeScript (источники `.ts`) + сгенерированные `.js` для деплоя
+В проекте игровой обмен полностью идет через **WebSocket**, HTTP используется только для health-check.
+
+### HTTP (минимум)
+
+| Шаг | Метод/путь | Кто отправляет | Тело | Ответ |
+|---|---|---|---|---|
+| 1 | `GET /health` | Render health-check / браузер | нет | `{ ok: true, service: "catch-the-google-backend" }` |
+
+### WebSocket (основной протокол)
+
+| Порядок | Канал | Кто -> Куда | Сообщение | Что делает сервер | Ответ |
+|---|---|---|---|---|---|
+| 1 | WS connect | Front -> Back | handshake | регистрирует соединение | `event(change)` с текущим snapshot |
+| 2 | request | Front -> Back | `{ type: "request", requestId, procedure: "joinGame", payload }` | назначает роль игрока | `response { result: { playerId } }` |
+| 3 | request | Front -> Back | `procedure: "setSettings"` | обновляет настройки матча | `response { result: snapshot }` |
+| 4 | request | Front -> Back | `procedure: "start"` | создаёт юниты, запускает таймеры | `response { result: snapshot }` |
+| 5 | request | Front -> Back | `procedure: "movePlayer..."` | валидирует ход, обновляет состояние | `response { result: snapshot }` |
+| 6 | event | Back -> Front(all) | `{ type: "event", eventName: "change", data }` | транслирует изменения всем клиентам | UI перерисовывает поле/счет |
+| 7 | event | Back -> Front(all) | `eventName: "googleCaught"/"finished"` | доменные события | UI показывает результат/модалку |
+| 8 | request | Front -> Back | `procedure: "stop"` | останавливает матч | `response { result: snapshot }` |
+
+Документация протокола:
+- HTTP/OpenAPI: [openapi.yaml](./docs/api/openapi.yaml)
+- WebSocket/AsyncAPI: [asyncapi.yaml](./docs/api/asyncapi.yaml)
+
+---
+
+## 4) Стек технологий
+
+- **Frontend**: HTML, CSS, TypeScript (источники `.ts`) + сгенерированные `.js` для деплоя
 - **Backend**: Node.js (runtime) + TypeScript (исходники)
 - **Realtime**: `ws` (WebSocket)
 - **Архитектурные паттерны**: MVC (упрощённо), Observer, Remote Proxy
 - **База данных**: PostgreSQL (Neon), пакет `pg`
+- **Качество кода**: ESLint (TS + JS)
 - **Тестирование**: `Vitest` (unit/integration/e2e), `ws` (e2e клиент)
-- **Аудио**: Web Audio API (тихий нейтральный loop, переключается `Sound on`)
+- **Аудио**: HTMLAudioElement + Web Audio API fallback (`get-low.mp3` тихо, через `Sound on`)
 - **Деплой backend**: Render
 - **Деплой frontend**: GitHub Pages
 
 ---
 
-## 4) Почему GitHub Pages + Render и как деплоить
+## 5) Почему GitHub Pages + Render и как деплоить
 
 ### Почему такой деплой
 
@@ -270,16 +299,6 @@ window.GAME_WS_URL = "wss://<your-render-service>.onrender.com";
 
 ---
 
-## Что ещё можно дополнить
-
-- Автотесты для `game.js` (unit/integration) под ключевые правила.
-- Лобби/комнаты (не один матч на весь сервер).
-- Авторизация игроков и профиль.
-- Лидерборд по сохранённым матчам.
-- CI (GitHub Actions): линт + тесты + проверка миграций.
-
----
-
 ## Тесты
 
 ### Как запускать
@@ -303,3 +322,23 @@ npm run test:e2e
 - `E2E` (реальный WebSocket сервер + клиент):
   - Запуск матча через протокол request/response.
   - Выдача ролей двум клиентам (`Player 1` и `Player 2`).
+
+## Линтинг и правила ESLint
+
+### Команды
+
+```bash
+npm run lint
+npm run lint:fix
+npm run check:migrations
+```
+
+### Ключевые правила и зачем они нужны
+
+| Правило | Для чего |
+|---|---|
+| `eqeqeq` | исключает неявные приведения типов в критичной игровой логике |
+| `@typescript-eslint/no-unused-vars` | убирает «мертвый» код и неиспользуемые параметры |
+| `import/order` | поддерживает стабильный порядок импортов, проще ревью и диффы |
+| `@typescript-eslint/consistent-type-imports` | делает TS-импорты предсказуемыми и чище сборку |
+| `no-console` = off (осознанно) | в сервере логирование важно для диагностики деплоя/WS |

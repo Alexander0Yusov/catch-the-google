@@ -10,6 +10,9 @@
     "start": "node ./back/server.js",
     "start:back": "node ./back/server.js",
     "start:front": "npx serve . -l 3000",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "check:migrations": "node ./scripts/check-migrations.mjs",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
@@ -32,6 +35,10 @@
     "@types/node": "^25.3.3",
     "@types/pg": "^8.18.0",
     "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "eslint": "^9.39.3",
+    "eslint-plugin-import": "^2.32.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   }
