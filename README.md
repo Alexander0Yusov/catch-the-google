@@ -37,7 +37,7 @@
 
 ### Ключевые бизнес-правила в коде
 
-- Доменная логика изолирована в [game.js](./game.js) и не зависит от DOM/браузера.
+- Доменная логика изолирована в [game.ts](./game.ts) и не зависит от DOM/браузера.
 - Проверка валидности хода:
   - границы поля (`#checkBorders`),
   - занятость клетки другим игроком (`#checkOtherPlayer`).
@@ -71,10 +71,10 @@
 ```mermaid
 sequenceDiagram
   participant U as User (Browser A/B)
-  participant UI as UI/Controller (front.js)
+  participant UI as UI/Controller (front.ts -> dist/front.js)
   participant RP as GameRemoteProxy
-  participant WS as WebSocket Server (Render)
-  participant D as Game Domain (game.js)
+  participant WS as WebSocket Server (Render, back/server.ts -> dist/back/server.js)
+  participant D as Game Domain (game.ts -> dist/game.js)
   participant DB as Neon PostgreSQL
 
   U->>UI: Нажатие клавиши (ход)
@@ -112,51 +112,82 @@ sequenceDiagram
 
 ```text
 CatchTheGoogle/
+  assets/
+    audio/
+      README.txt
   back/
     migrations/
       001_init_2.sql
-    db.js
-    server.js
+    db.ts
+    server.ts
   css/
     common.css
     null.css
     style.css
+  dist/
+    back/
+      db.js
+      server.js
+    domain/
+      Google.js
+      NumberUtil.js
+      Player.js
+      Position.js
+      Unit.js
+    observer/
+      EventEmitter.js
+    front.js
+    game-remote-proxy.js
+    game.js
   docs/
+    api/
+      asyncapi.yaml
+      openapi.yaml
     screenshots/
       .gitkeep
-      gameplay-start.png (добавьте)
-      gameplay-win.png (добавьте)
-      gameplay.gif (добавьте)
+      gameplay-start.png
+      gameplay-win.png
+      gameplay.png
   domain/
-    Google.js
-    NumberUtil.js
-    Player.js
-    Position.js
-    Unit.js
+    Google.ts
+    NumberUtil.ts
+    Player.ts
+    Position.ts
+    Unit.ts
   img/
+  js/
+    script.js
   observer/
-    EventEmitter.js
+    EventEmitter.ts
+  scripts/
+    check-migrations.mjs
+  tests/
+    e2e/
+    integration/
+    unit/
   config.js
-  front.js
-  game-remote-proxy.js
-  game.js
+  front.ts
+  game-remote-proxy.ts
+  game.ts
   index.html
   package.json
   render.yaml
   README.md
   README.en.md
+  tsconfig.json
+  vitest.config.ts
 ```
 
 ### Граф зависимостей между модулями
 
 ```mermaid
 graph TD
-  UI[index.html + front.js] --> RP[game-remote-proxy.js]
-  RP --> WS[back/server.js]
-  WS --> GAME[game.js]
-  GAME --> OBS[observer/EventEmitter.js]
-  GAME --> DOMAIN[domain/*]
-  WS --> DB[back/db.js]
+  UI[index.html + dist/front.js] --> RP[dist/game-remote-proxy.js]
+  RP --> WS[dist/back/server.js]
+  WS --> GAME[dist/game.js]
+  GAME --> OBS[dist/observer/EventEmitter.js]
+  GAME --> DOMAIN[dist/domain/*]
+  WS --> DB[dist/back/db.js]
   DB --> SQL[back/migrations/001_init_2.sql]
 ```
 
@@ -173,7 +204,10 @@ classDiagram
     -score
     +start()
     +stop()
+    +pause()
+    +resume()
     +setSettings()
+    +getSnapshot()
     +movePlayer1...()
     +movePlayer2...()
   }
@@ -333,12 +367,12 @@ window.GAME_WS_URL = "wss://<your-render-service>.onrender.com";
 
 ### Gameplay start
 
-`./docs/screenshots/gameplay-start.png`
+![Gameplay start](./docs/screenshots/gameplay-start.png)
 
 ### Gameplay win state
 
-`./docs/screenshots/gameplay-win.png`
+![Gameplay win state](./docs/screenshots/gameplay-win.png)
 
 ### Gameplay (main)
 
-`./docs/screenshots/gameplay.png`
+![Gameplay main](./docs/screenshots/gameplay.png)
