@@ -1,0 +1,16 @@
+﻿services:
+  - type: web
+    name: catch-the-google-backend
+    runtime: node
+    plan: free
+    autoDeploy: true
+    buildCommand: npm install
+    startCommand: npm run start:back
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: DB_SSL
+        value: enable
+      - key: DATABASE_URL
+        sync: false

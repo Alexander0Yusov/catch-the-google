@@ -1,0 +1,25 @@
+﻿{
+  "name": "catch-the-google",
+  "version": "1.0.0",
+  "description": "Мультиплеерная игра Catch The Google (WebSocket + Node.js)",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node ./back/server.js",
+    "start:back": "node ./back/server.js",
+    "start:front": "npx serve . -l 3000"
+  },
+  "keywords": [
+    "websocket",
+    "game",
+    "nodejs",
+    "portfolio"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pg": "^8.19.0",
+    "ws": "^8.19.0"
+  }
+}
+

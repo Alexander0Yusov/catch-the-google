@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="css/style.css" />
+    <title>Catch The Google</title>
+  </head>
+  <body>
+    <main>
+      <section class="container">
+        <div class="top-items">
+          <div class="line">
+            <label for="grid-size-select">Grid size</label>
+            <select id="grid-size-select">
+              <option value="4x4" selected>4x4</option>
+              <option value="5x5">5x5</option>
+              <option value="6x6">6x6</option>
+              <option value="7x7">7x7</option>
+            </select>
+          </div>
+          <div class="line">
+            <label for="points-to-win-select">Points to win</label>
+            <select id="points-to-win-select">
+              <option value="5">5 pts</option>
+              <option value="10" selected>10 pts</option>
+              <option value="20">20 pts</option>
+            </select>
+          </div>
+          <div class="line">
+            <label for="time-select">Time</label>
+            <select id="time-select">
+              <option value="60000">1 min</option>
+              <option value="120000" selected>2 min</option>
+              <option value="180000">3 min</option>
+            </select>
+          </div>
+          <div class="line">
+            <label for="player-role-select">Choose who you will play for?</label>
+            <select id="player-role-select">
+              <option value="1" selected>Player 1</option>
+              <option value="2">Player 2</option>
+              <option value="0">Spectator</option>
+            </select>
+          </div>
+          <div class="switch-button">
+            <label>Sound on</label>
+            <button class="toggle" id="sound-toggle" type="button">
+              <span class="icon-slider"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="main-elements">
+          <button class="button main-button" id="start-game-button">START GAME</button>
+
+          <div class="result-container">
+            <div class="result-block">
+              <span class="result-title">Catch:</span>
+              <span class="result" id="catch-value">0</span>
+            </div>
+            <div class="result-block">
+              <span class="result-title">Enemy:</span>
+              <span class="result" id="enemy-value">0</span>
+            </div>
+            <div class="result-block">
+              <span class="result-title">Time:</span>
+              <span class="result" id="time-value">00:00</span>
+            </div>
+          </div>
+
+          <table class="table" id="grid-game">
+            <tbody id="grid-body"></tbody>
+          </table>
+
+          <div class="status-bar" id="status-bar">Status: pending</div>
+
+          <div class="modal hidden" id="win-modal">
+            <div class="modal-decoration"><img src="img/icons/winnerIcon.svg" alt="winner" /></div>
+            <div class="modal-elements">
+              <div class="title-modal">You Win!</div>
+              <div class="text-modal">Поздравляем, вы поймали больше Google</div>
+              <button class="button" id="play-again-win" type="button">Play again</button>
+            </div>
+          </div>
+
+          <div class="modal hidden" id="lose-modal">
+            <div class="modal-decoration"><img src="img/icons/lossIcon.svg" alt="loss" /></div>
+            <div class="modal-elements">
+              <div class="title-modal">You Lose!</div>
+              <div class="text-modal">Попробуйте снова</div>
+              <button class="button" id="play-again-lose" type="button">Play again</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="config.js"></script>    <script type="module" src="front.js"></script>
+  </body>
+</html>
+

@@ -1,0 +1,238 @@
+@import "null.css";
+@import "common.css";
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+
+/* Page //======================================================================================================================================================== */
+
+.container {
+    margin: 0 auto;
+    max-width: 1182px;
+    padding: 0 15px;
+    height: 100vh;
+}
+
+.main-elements {
+    display: flex;
+    flex-direction: column;
+}
+
+.top-items {
+    display: flex;
+    gap: 12px;
+    padding-top: 24px;
+    flex-wrap: wrap;
+}
+
+.line {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 350px;
+}
+
+label {
+    color: #B6FDE5;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 24px;
+}
+
+select {
+    height: 36px;
+    font-size: 16px;
+    background: #191A1C;
+    font-weight: 400;
+    line-height: 24px;
+    color: #FFF;
+    border-radius: 5px;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+/* Toggle //======================================================================================================================================================== */
+
+.switch-button {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.main-button {
+    align-self: center;
+    margin-top: 288px;
+}
+
+.toggle {
+    width: 36px;
+    height: 20px;
+    border: 1px solid #313A33;
+    background: #212720;
+    border-radius: 360px;
+    display: flex;
+    padding: 0 2px;
+    align-items: center;
+    justify-content: flex-start;
+    transition: all 0.3s ease 0s;
+}
+
+.toggle.on {
+    background: linear-gradient(90deg, #4AA32F 0%, #66DC42 100%);
+    border: 1px solid #75FA4C;
+    justify-content: flex-end;
+}
+
+.icon-slider {
+    width: 16px;
+    height: 16px;
+    background-color: #FDFDFD;
+    border-radius: 50%;
+    position: relative;
+    transition: all 0.3s ease 0s;
+}
+
+.icon-slider:after {
+    position: absolute;
+    content: '';
+    height: 14px;
+    width: 14px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-image: url('../img/icons/soundOffIcon.svg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+.toggle.on .icon-slider:after {
+    background-image: url('../img/icons/soundOnIcon.svg');
+}
+
+/* Toggle //======================================================================================================================================================== */
+
+
+/* Result //======================================================================================================================================================== */
+
+.result-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 36px;
+    border-radius: 30px;
+    border: 1px solid #4C5E50;
+    background-color: rgba(57, 61, 55, 0.40);
+    margin: 36px auto;
+    max-width: 376px;
+    min-width: 376px;
+    column-gap: 30px;
+}
+
+.result-block {
+    display: inline-flex;
+    gap: 24px;
+    justify-content: space-between;
+}
+
+.result-title {
+    font-size: 18px;
+    font-weight: 400;
+}
+
+.result {
+    font-size: 24px;
+    font-weight: 500;
+}
+
+/* Table //======================================================================================================================================================== */
+
+.table {
+    border-collapse: separate;
+    border-spacing: 12px 6px;
+    table-layout:fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Modal //======================================================================================================================================================== */
+
+.modal {
+    margin: 0 auto;
+    position: relative;
+    max-width: 280px;
+    max-height: 550px;
+}
+
+.modal-elements {
+    align-self: center;
+    position: relative;
+    padding: 71px 24px 36px;
+    width: 280px;
+    height: 407px;
+    text-align: center;
+    z-index: 10;
+}
+
+.modal-elements:before {
+    content: '';
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background-image: url('../img/icons/t-ShirtIcon.svg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    z-index: -1;
+}
+
+.modal-decoration {
+    position: relative;
+    top: 53px;
+    left: 68px;
+    width: 144px;
+    height: 144px;
+    border: 2px solid #999B95;
+    background-color: rgba(110, 117, 102, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.title-modal {
+    font-size: 48px;
+    font-weight: 600;
+    line-height: 60px;
+    margin-bottom: 4px;
+}
+
+.text-modal {
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 24px;
+    margin-bottom: 24px;
+}
+
+.modal-result {
+    margin-bottom: 68px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+
+#grid-game img {
+    width: 50px;
+    height: 50px;
+}
+
+.status-bar {
+    margin: 12px auto;
+    font-size: 16px;
+    color: #d4ead0;
+}
+
+.hidden {
+    display: none;
+}
