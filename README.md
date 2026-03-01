@@ -91,7 +91,22 @@ sequenceDiagram
 
 ---
 
-## 2) Структура проекта, зависимости и БД
+## 2) Стек технологий
+
+- **Frontend**: HTML, CSS, TypeScript (исходники `.ts`) + сборка в `dist/*.js`
+- **Backend**: Node.js (runtime) + TypeScript (исходники)
+- **Realtime**: `ws` (WebSocket)
+- **Архитектурные паттерны**: MVC (упрощённо), Observer, Remote Proxy
+- **База данных**: PostgreSQL (Neon), пакет `pg`
+- **Качество кода**: ESLint (TS + JS)
+- **Тестирование**: `Vitest` (unit/integration/e2e), `ws` (e2e клиент)
+- **Аудио**: HTMLAudioElement + Web Audio API fallback (`get-low.mp3` тихо, через `Sound on`)
+- **Деплой backend**: Render
+- **Деплой frontend**: GitHub Pages
+
+---
+
+## 3) Структура проекта, зависимости и БД
 
 ### Каталоги проекта
 
@@ -202,7 +217,7 @@ erDiagram
 
 ---
 
-## 3) Флоу Frontend ↔ Backend
+## 4) Флоу Frontend ↔ Backend
 
 В проекте игровой обмен полностью идет через **WebSocket**, HTTP используется только для health-check.
 
@@ -233,22 +248,53 @@ erDiagram
 
 ---
 
-## 4) Стек технологий
+## 5) Тесты
 
-- **Frontend**: HTML, CSS, TypeScript (источники `.ts`) + сгенерированные `.js` для деплоя
-- **Backend**: Node.js (runtime) + TypeScript (исходники)
-- **Realtime**: `ws` (WebSocket)
-- **Архитектурные паттерны**: MVC (упрощённо), Observer, Remote Proxy
-- **База данных**: PostgreSQL (Neon), пакет `pg`
-- **Качество кода**: ESLint (TS + JS)
-- **Тестирование**: `Vitest` (unit/integration/e2e), `ws` (e2e клиент)
-- **Аудио**: HTMLAudioElement + Web Audio API fallback (`get-low.mp3` тихо, через `Sound on`)
-- **Деплой backend**: Render
-- **Деплой frontend**: GitHub Pages
+### Как запускать
+
+```bash
+npm run build
+npm test
+npm run test:unit
+npm run test:integration
+npm run test:e2e
+```
+
+### Наборы и кейсы
+
+- `Unit`:
+  - `Position.clone/equal` — корректность копирования и сравнения координат.
+  - `EventEmitter` — доставка события и корректная отписка.
+- `Integration`:
+  - `Game.start` — инициализация юнитов и уникальность позиций.
+  - Очерёдность хода и `turnDelayMs` — блокировка раннего/чужого хода.
+- `E2E` (реальный WebSocket сервер + клиент):
+  - Запуск матча через протокол request/response.
+  - Выдача ролей двум клиентам (`Player 1` и `Player 2`).
+
+## 6) Линтинг и правила ESLint
+
+### Команды
+
+```bash
+npm run lint
+npm run lint:fix
+npm run check:migrations
+```
+
+### Ключевые правила и зачем они нужны
+
+| Правило | Для чего |
+|---|---|
+| `eqeqeq` | исключает неявные приведения типов в критичной игровой логике |
+| `@typescript-eslint/no-unused-vars` | убирает «мертвый» код и неиспользуемые параметры |
+| `import/order` | поддерживает стабильный порядок импортов, проще ревью и диффы |
+| `@typescript-eslint/consistent-type-imports` | делает TS-импорты предсказуемыми и чище сборку |
+| `no-console` = off (осознанно) | в сервере логирование важно для диагностики деплоя/WS |
 
 ---
 
-## 5) Почему GitHub Pages + Render и как деплоить
+## 7) Почему GitHub Pages + Render и как деплоить
 
 ### Почему такой деплой
 
@@ -283,7 +329,7 @@ window.GAME_WS_URL = "wss://<your-render-service>.onrender.com";
 
 ---
 
-## Скриншоты и GIF
+## 8) Скриншоты и GIF
 
 > Добавьте свои файлы в папку `docs/screenshots/`, чтобы превью отображались в портфолио.
 
@@ -298,49 +344,3 @@ window.GAME_WS_URL = "wss://<your-render-service>.onrender.com";
 ### Gameplay GIF
 
 `./docs/screenshots/gameplay.gif`
-
----
-
-## Тесты
-
-### Как запускать
-
-```bash
-npm run build
-npm test
-npm run test:unit
-npm run test:integration
-npm run test:e2e
-```
-
-### Наборы и кейсы
-
-- `Unit`:
-  - `Position.clone/equal` — корректность копирования и сравнения координат.
-  - `EventEmitter` — доставка события и корректная отписка.
-- `Integration`:
-  - `Game.start` — инициализация юнитов и уникальность позиций.
-  - Очерёдность хода и `turnDelayMs` — блокировка раннего/чужого хода.
-- `E2E` (реальный WebSocket сервер + клиент):
-  - Запуск матча через протокол request/response.
-  - Выдача ролей двум клиентам (`Player 1` и `Player 2`).
-
-## Линтинг и правила ESLint
-
-### Команды
-
-```bash
-npm run lint
-npm run lint:fix
-npm run check:migrations
-```
-
-### Ключевые правила и зачем они нужны
-
-| Правило | Для чего |
-|---|---|
-| `eqeqeq` | исключает неявные приведения типов в критичной игровой логике |
-| `@typescript-eslint/no-unused-vars` | убирает «мертвый» код и неиспользуемые параметры |
-| `import/order` | поддерживает стабильный порядок импортов, проще ревью и диффы |
-| `@typescript-eslint/consistent-type-imports` | делает TS-импорты предсказуемыми и чище сборку |
-| `no-console` = off (осознанно) | в сервере логирование важно для диагностики деплоя/WS |
