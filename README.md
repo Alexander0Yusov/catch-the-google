@@ -329,9 +329,7 @@ window.GAME_WS_URL = "wss://<your-render-service>.onrender.com";
 
 ---
 
-## 8) Скриншоты и GIF
-
-> Добавьте свои файлы в папку `docs/screenshots/`, чтобы превью отображались в портфолио.
+## 8) Скриншоты
 
 ### Gameplay start
 
@@ -340,7 +338,3 @@ window.GAME_WS_URL = "wss://<your-render-service>.onrender.com";
 ### Gameplay win state
 
 `./docs/screenshots/gameplay-win.png`
-
-### Gameplay GIF
-
-`./docs/screenshots/gameplay.gif`
