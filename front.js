@@ -161,25 +161,25 @@ const restartGame = async () => {
   startTimer();
 };
 
-const moveByRole = (code) => {
+const moveByRole = async (code) => {
   const myPlayerId = Number(playerRoleSelect.value);
   if (myPlayerId === 0) {
     return;
   }
 
   if (myPlayerId === 1) {
-    if (code === "ArrowUp") game.movePlayer1Up();
-    if (code === "ArrowDown") game.movePlayer1Down();
-    if (code === "ArrowLeft") game.movePlayer1Left();
-    if (code === "ArrowRight") game.movePlayer1Right();
+    if (code === "ArrowUp") await game.movePlayer1Up();
+    if (code === "ArrowDown") await game.movePlayer1Down();
+    if (code === "ArrowLeft") await game.movePlayer1Left();
+    if (code === "ArrowRight") await game.movePlayer1Right();
     return;
   }
 
   if (myPlayerId === 2) {
-    if (code === "ArrowUp") game.movePlayer2Up();
-    if (code === "ArrowDown") game.movePlayer2Down();
-    if (code === "ArrowLeft") game.movePlayer2Left();
-    if (code === "ArrowRight") game.movePlayer2Right();
+    if (code === "ArrowUp") await game.movePlayer2Up();
+    if (code === "ArrowDown") await game.movePlayer2Down();
+    if (code === "ArrowLeft") await game.movePlayer2Left();
+    if (code === "ArrowRight") await game.movePlayer2Right();
   }
 };
 
@@ -203,8 +203,20 @@ const bootstrap = async () => {
     });
   });
 
-  window.addEventListener("keydown", (event) => {
-    moveByRole(event.code);
+  window.addEventListener("keydown", async (event) => {
+    const arrowKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+    if (!arrowKeys.includes(event.code)) {
+      return;
+    }
+
+    // Блокируем нативный скролл страницы по стрелкам во время матча.
+    event.preventDefault();
+
+    if (game.state.status !== "in-progress") {
+      return;
+    }
+
+    await moveByRole(event.code);
   });
 
   eventEmitter.on("change", (state) => {
