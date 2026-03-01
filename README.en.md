@@ -118,12 +118,13 @@ erDiagram
 
 ## 3) Technology Stack
 
-- Frontend: HTML, CSS, Vanilla JS (ESM)
-- Backend: Node.js
+- Frontend/Core language: TypeScript sources (`.ts`) + generated `.js` for deployment runtime
+- Backend: Node.js runtime + TypeScript sources
 - Realtime: WebSocket (`ws`)
 - Patterns: MVC (lightweight), Observer, Remote Proxy
 - Database: PostgreSQL (Neon), `pg`
 - Testing: `Vitest` (unit/integration/e2e), `ws` (e2e client)
+- Audio: Web Audio API (quiet neutral loop controlled by `Sound on` switch)
 - Deployment: GitHub Pages + Render
 
 ## 4) Why GitHub Pages + Render + Deployment Guide
@@ -157,6 +158,7 @@ Add your media files to `docs/screenshots/`:
 ### Run
 
 ```bash
+npm run build
 npm test
 npm run test:unit
 npm run test:integration

@@ -205,11 +205,13 @@ erDiagram
 ## 3) Стек технологий
 
 - **Frontend**: HTML, CSS, Vanilla JS (ES Modules)
-- **Backend**: Node.js
+- **Frontend/Core language**: TypeScript (источники `.ts`) + сгенерированные `.js` для деплоя
+- **Backend**: Node.js (runtime) + TypeScript (исходники)
 - **Realtime**: `ws` (WebSocket)
 - **Архитектурные паттерны**: MVC (упрощённо), Observer, Remote Proxy
 - **База данных**: PostgreSQL (Neon), пакет `pg`
 - **Тестирование**: `Vitest` (unit/integration/e2e), `ws` (e2e клиент)
+- **Аудио**: Web Audio API (тихий нейтральный loop, переключается `Sound on`)
 - **Деплой backend**: Render
 - **Деплой frontend**: GitHub Pages
 
@@ -283,6 +285,7 @@ window.GAME_WS_URL = "wss://<your-render-service>.onrender.com";
 ### Как запускать
 
 ```bash
+npm run build
 npm test
 npm run test:unit
 npm run test:integration

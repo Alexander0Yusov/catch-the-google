@@ -1,4 +1,10 @@
-﻿import { describe, expect, it, vi } from "vitest";
+﻿// @ts-nocheck
+/**
+ * TEST-CASE FILE
+ * Этот файл документирует конкретные проверки для уровня: unit/integration/e2e.
+ * Комментарии оставлены намеренно подробно для портфолио-защиты.
+ */
+import { describe, expect, it, vi } from "vitest";
 import { EventEmitter } from "../../observer/EventEmitter.js";
 
 describe("EventEmitter unit", () => {
@@ -24,3 +30,5 @@ describe("EventEmitter unit", () => {
     expect(callback).not.toHaveBeenCalled();
   });
 });
+
+

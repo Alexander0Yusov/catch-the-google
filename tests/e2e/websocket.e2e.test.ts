@@ -1,4 +1,10 @@
-﻿import { afterAll, beforeAll, describe, expect, it } from "vitest";
+﻿// @ts-nocheck
+/**
+ * TEST-CASE FILE
+ * Этот файл документирует конкретные проверки для уровня: unit/integration/e2e.
+ * Комментарии оставлены намеренно подробно для портфолио-защиты.
+ */
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
 import { createGameServer } from "../../back/server.js";
 
@@ -68,17 +74,20 @@ class WsTestClient {
 }
 
 describe("WebSocket e2e", () => {
-  let app;
-  let baseUrl;
+  let app = null;
+  let baseUrl = "";
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     process.env.DATABASE_URL = "";
     app = await createGameServer({ port: 0 });
     baseUrl = `ws://127.0.0.1:${app.port}`;
   });
 
-  afterAll(async () => {
-    await app.stop();
+  afterEach(async () => {
+    if (app) {
+      await app.stop();
+      app = null;
+    }
   });
 
   it("starts game via websocket request/response", async () => {
@@ -119,3 +128,5 @@ describe("WebSocket e2e", () => {
     await client2.close();
   });
 });
+
+

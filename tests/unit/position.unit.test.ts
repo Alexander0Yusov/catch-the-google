@@ -1,4 +1,10 @@
-﻿import { describe, expect, it } from "vitest";
+﻿// @ts-nocheck
+/**
+ * TEST-CASE FILE
+ * Этот файл документирует конкретные проверки для уровня: unit/integration/e2e.
+ * Комментарии оставлены намеренно подробно для портфолио-защиты.
+ */
+import { describe, expect, it } from "vitest";
 import { Position } from "../../domain/Position.js";
 
 describe("Position unit", () => {
@@ -17,3 +23,5 @@ describe("Position unit", () => {
     expect(a.equal(b)).toBe(false);
   });
 });
+
+

@@ -1,4 +1,10 @@
-﻿import { describe, expect, it } from "vitest";
+﻿// @ts-nocheck
+/**
+ * TEST-CASE FILE
+ * Этот файл документирует конкретные проверки для уровня: unit/integration/e2e.
+ * Комментарии оставлены намеренно подробно для портфолио-защиты.
+ */
+import { describe, expect, it } from "vitest";
 import { Game } from "../../game.js";
 import { EventEmitter } from "../../observer/EventEmitter.js";
 
@@ -75,3 +81,5 @@ describe("Game integration", () => {
     await game.stop();
   });
 });
+
+
