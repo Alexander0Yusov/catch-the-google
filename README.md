@@ -223,8 +223,11 @@ erDiagram
 1. В Render: `New + -> Blueprint`.
 2. Указать этот репозиторий.
 3. Render прочитает [render.yaml](./render.yaml).
-4. В env добавить `DATABASE_URL` (из Neon).
-5. Проверить `https://<service>.onrender.com/health`.
+4. В env добавить подключение к Neon:
+   - либо `DATABASE_URL`
+   - либо `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DATABASE`
+5. Убедиться, что `AUTO_RUN_MIGRATIONS=false` (по умолчанию), чтобы не менять существующие таблицы.
+6. Проверить `https://<service>.onrender.com/health`.
 
 #### Frontend (GitHub Pages)
 

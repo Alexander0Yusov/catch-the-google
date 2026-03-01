@@ -10,21 +10,25 @@ const __dirname = path.dirname(__filename);
 
 export class GameDb {
   constructor() {
-    this.enabled = Boolean(process.env.DATABASE_URL);
+    this.enabled = this.#hasDbConfig();
+    this.autoRunMigrations = process.env.AUTO_RUN_MIGRATIONS === "true";
 
     if (!this.enabled) {
       return;
     }
 
-    this.pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.DB_SSL === "disable" ? false : { rejectUnauthorized: false },
-    });
+    this.pool = new Pool(this.#buildPoolConfig());
   }
 
   async init() {
     if (!this.enabled) {
       // БД необязательна для игрового цикла: в demo-режиме состояние держим в памяти.
+      return;
+    }
+
+    if (!this.autoRunMigrations) {
+      // По умолчанию не запускаем миграции автоматически,
+      // чтобы не менять уже существующую схему в целевой БД.
       return;
     }
 
@@ -110,6 +114,36 @@ export class GameDb {
       `,
       [sessionToken, playerId, points]
     );
+  }
+
+  #hasDbConfig() {
+    return Boolean(
+      process.env.DATABASE_URL ||
+        (process.env.POSTGRES_HOST &&
+          process.env.POSTGRES_USER &&
+          process.env.POSTGRES_PASSWORD &&
+          process.env.POSTGRES_DATABASE)
+    );
+  }
+
+  #buildPoolConfig() {
+    const ssl = process.env.DB_SSL === "disable" ? false : { rejectUnauthorized: false };
+
+    if (process.env.DATABASE_URL) {
+      return {
+        connectionString: process.env.DATABASE_URL,
+        ssl,
+      };
+    }
+
+    return {
+      host: process.env.POSTGRES_HOST,
+      port: Number(process.env.POSTGRES_PORT || 5432),
+      user: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      database: process.env.POSTGRES_DATABASE,
+      ssl,
+    };
   }
 }
 

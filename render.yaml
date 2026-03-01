@@ -12,5 +12,7 @@
         value: 22
       - key: DB_SSL
         value: enable
+      - key: AUTO_RUN_MIGRATIONS
+        value: "false"
       - key: DATABASE_URL
         sync: false

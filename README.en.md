@@ -134,9 +134,12 @@ erDiagram
 ### Quick deploy
 
 1. Backend: Render `Blueprint` from this repo (`render.yaml`).
-2. Add env var `DATABASE_URL` from Neon.
-3. Frontend: set `window.GAME_WS_URL` in `config.js`.
-4. Enable GitHub Pages from `main` branch root.
+2. Add Neon connection:
+   - either `DATABASE_URL`
+   - or `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DATABASE`.
+3. Keep `AUTO_RUN_MIGRATIONS=false` to avoid changing existing tables.
+4. Frontend: set `window.GAME_WS_URL` in `config.js`.
+5. Enable GitHub Pages from `main` branch root.
 
 ## Screenshots and GIF
 
