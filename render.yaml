@@ -4,7 +4,7 @@
     runtime: node
     plan: free
     autoDeploy: true
-    buildCommand: npm install
+    buildCommand: npm install && npm run build
     startCommand: npm run start:back
     healthCheckPath: /health
     envVars:

@@ -7,8 +7,8 @@
   "scripts": {
     "build": "npm run build:ts",
     "build:ts": "tsc",
-    "start": "node ./back/server.js",
-    "start:back": "node ./back/server.js",
+    "start": "node ./dist/back/server.js",
+    "start:back": "node ./dist/back/server.js",
     "start:front": "npx serve . -l 3000",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
