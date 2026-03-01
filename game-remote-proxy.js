@@ -24,7 +24,7 @@ export class GameRemoteProxy {
     };
   }
 
-  async start() {
+  async connect() {
     if (!this.ws || this.ws.readyState === WebSocket.CLOSED) {
       const wsUrl =
         this.options.wsUrl ||
@@ -55,7 +55,10 @@ export class GameRemoteProxy {
         }
       });
     }
+  }
 
+  async start() {
+    await this.connect();
     const snapshot = await this.api.send("start");
     this.#mergeState(snapshot);
     this.eventEmitter.emit("change", this.state);
@@ -64,6 +67,7 @@ export class GameRemoteProxy {
   }
 
   async stop() {
+    await this.connect();
     const snapshot = await this.api.send("stop");
     this.#mergeState(snapshot);
     this.eventEmitter.emit("change", this.state);
@@ -71,6 +75,7 @@ export class GameRemoteProxy {
   }
 
   async finishGame() {
+    await this.connect();
     const snapshot = await this.api.send("finishGame");
     this.#mergeState(snapshot);
     this.eventEmitter.emit("change", this.state);
@@ -78,6 +83,7 @@ export class GameRemoteProxy {
   }
 
   async setSettings(settings) {
+    await this.connect();
     const snapshot = await this.api.send("setSettings", settings);
     this.#mergeState(snapshot);
     this.eventEmitter.emit("change", this.state);
@@ -85,80 +91,96 @@ export class GameRemoteProxy {
   }
 
   async joinGame(preferredPlayerId) {
+    await this.connect();
     const result = await this.api.send("joinGame", { preferredPlayerId });
     this.state.myPlayerId = result.playerId;
     return result;
   }
 
-  movePlayer1Right() {
+  async movePlayer1Right() {
+    await this.connect();
     return this.api.send("movePlayer1Right");
   }
 
-  movePlayer1Left() {
+  async movePlayer1Left() {
+    await this.connect();
     return this.api.send("movePlayer1Left");
   }
 
-  movePlayer1Up() {
+  async movePlayer1Up() {
+    await this.connect();
     return this.api.send("movePlayer1Up");
   }
 
-  movePlayer1Down() {
+  async movePlayer1Down() {
+    await this.connect();
     return this.api.send("movePlayer1Down");
   }
 
-  movePlayer2Right() {
+  async movePlayer2Right() {
+    await this.connect();
     return this.api.send("movePlayer2Right");
   }
 
-  movePlayer2Left() {
+  async movePlayer2Left() {
+    await this.connect();
     return this.api.send("movePlayer2Left");
   }
 
-  movePlayer2Up() {
+  async movePlayer2Up() {
+    await this.connect();
     return this.api.send("movePlayer2Up");
   }
 
-  movePlayer2Down() {
+  async movePlayer2Down() {
+    await this.connect();
     return this.api.send("movePlayer2Down");
   }
 
   async getSettings() {
+    await this.connect();
     const result = await this.api.send("getSettings");
     this.state.settings = result;
     return result;
   }
 
   async getStatus() {
+    await this.connect();
     const result = await this.api.send("getStatus");
     this.state.status = result;
     return result;
   }
 
   async getPlayer1() {
+    await this.connect();
     const result = await this.api.send("getPlayer1");
     this.state.player1 = result;
     return result;
   }
 
   async getPlayer2() {
+    await this.connect();
     const result = await this.api.send("getPlayer2");
     this.state.player2 = result;
     return result;
   }
 
   async getGoogle() {
+    await this.connect();
     const result = await this.api.send("getGoogle");
     this.state.google = result;
     return result;
   }
 
   async getScore() {
+    await this.connect();
     const result = await this.api.send("getScore");
     this.state.score = result;
     return result;
   }
 
   async getSnapshot() {
+    await this.connect();
     const result = await this.api.send("getSnapshot");
     this.#mergeState(result);
     return this.state;

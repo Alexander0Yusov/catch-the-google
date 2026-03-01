@@ -217,11 +217,10 @@ const bootstrap = async () => {
     showFinishModal(game.state);
   });
 
-  await game.start();
+  await game.connect();
   await game.joinGame(Number(playerRoleSelect.value));
   await applySettings();
   await render();
-  startTimer();
 
   startButton.addEventListener("click", async () => {
     await restartGame();
