@@ -79,6 +79,16 @@ select {
     background-color: #fb6a22;
 }
 
+.stop-button {
+    border-color: #ef4444;
+    background-color: #dc2626;
+    box-shadow: 0 4px 10px 2px rgba(220, 38, 38, 0.25), 0 -4px 10px 2px rgba(220, 38, 38, 0.25);
+}
+
+.stop-button:hover {
+    background-color: #ef4444;
+}
+
 .toggle {
     width: 36px;
     height: 20px;
@@ -172,6 +182,29 @@ select {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.cell {
+    position: relative;
+}
+
+.player-marker {
+    position: absolute;
+    top: 4px;
+    left: 6px;
+    font-size: 21px;
+    line-height: 1;
+    font-weight: 500;
+    pointer-events: none;
+    font-family: "Roboto", serif;
+}
+
+.player-marker.player1 {
+    color: #1f89ff;
+}
+
+.player-marker.player2 {
+    color: #fff45a;
 }
 
 /* Modal //======================================================================================================================================================== */

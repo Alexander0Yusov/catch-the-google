@@ -7,6 +7,7 @@ const timeSelect = document.querySelector("#time-select");
 const playerRoleSelect = document.querySelector("#player-role-select");
 const startButton = document.querySelector("#start-game-button");
 const resetButton = document.querySelector("#reset-game-button");
+const stopButton = document.querySelector("#stop-game-button");
 const soundToggle = document.querySelector("#sound-toggle");
 const catchValue = document.querySelector("#catch-value");
 const enemyValue = document.querySelector("#enemy-value");
@@ -76,6 +77,11 @@ const renderBoard = (state) => {
       }
 
       if (state.player1?.position.x === x && state.player1?.position.y === y) {
+        const marker = document.createElement("span");
+        marker.className = "player-marker player1";
+        marker.textContent = "1";
+        tdElement.appendChild(marker);
+
         const image = document.createElement("img");
         image.src = playerIcons.player1;
         image.alt = "player1";
@@ -83,6 +89,11 @@ const renderBoard = (state) => {
       }
 
       if (state.player2?.position.x === x && state.player2?.position.y === y) {
+        const marker = document.createElement("span");
+        marker.className = "player-marker player2";
+        marker.textContent = "2";
+        tdElement.appendChild(marker);
+
         const image = document.createElement("img");
         image.src = playerIcons.player2;
         image.alt = "player2";
@@ -160,6 +171,12 @@ const restartGame = async () => {
   await game.start();
   await render();
   startTimer();
+};
+
+const stopGame = async () => {
+  await game.stop();
+  clearInterval(timerIntervalId);
+  await render();
 };
 
 const moveByKeys = async (code) => {
@@ -243,6 +260,10 @@ const bootstrap = async () => {
 
   resetButton.addEventListener("click", async () => {
     await restartGame();
+  });
+
+  stopButton.addEventListener("click", async () => {
+    await stopGame();
   });
 };
 
