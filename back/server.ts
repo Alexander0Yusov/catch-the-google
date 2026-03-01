@@ -86,15 +86,45 @@ export async function createGameServer(options = {}) {
       main { max-width: 1100px; margin: 0 auto; padding: 24px; }
       h1 { margin-top: 0; }
       a { color: #67e8f9; }
-      iframe { width: 100%; min-height: 70vh; border: 1px solid #334155; background: #020617; }
+      pre {
+        width: 100%;
+        min-height: 70vh;
+        border: 1px solid #334155;
+        background: #020617;
+        color: #e2e8f0;
+        padding: 16px;
+        overflow: auto;
+        white-space: pre;
+      }
     </style>
   </head>
   <body>
     <main>
       <h1>WebSocket / AsyncAPI docs</h1>
       <p>Raw spec: <a href="/ws-docs/asyncapi.yaml" target="_blank" rel="noreferrer">/ws-docs/asyncapi.yaml</a></p>
-      <iframe src="/ws-docs/asyncapi.yaml" title="AsyncAPI YAML"></iframe>
+      <pre id="asyncapi-content">Загрузка спецификации...</pre>
     </main>
+    <script>
+      fetch("/ws-docs/asyncapi.yaml")
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+          }
+          return response.text();
+        })
+        .then((text) => {
+          const pre = document.getElementById("asyncapi-content");
+          if (pre) {
+            pre.textContent = text;
+          }
+        })
+        .catch((error) => {
+          const pre = document.getElementById("asyncapi-content");
+          if (pre) {
+            pre.textContent = "Не удалось загрузить AsyncAPI спецификацию: " + error.message;
+          }
+        });
+    </script>
   </body>
 </html>`;
 
