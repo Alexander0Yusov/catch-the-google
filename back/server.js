@@ -79,12 +79,6 @@ export async function createGameServer(options = {}) {
       main { max-width: 1100px; margin: 0 auto; padding: 24px; }
       h1 { margin-top: 0; }
       a { color: #67e8f9; }
-      #asyncapi-container {
-        width: 100%;
-        min-height: 70vh;
-        border: 1px solid #334155;
-        background: #020617;
-      }
       pre {
         width: 100%;
         min-height: 70vh;
@@ -101,61 +95,40 @@ export async function createGameServer(options = {}) {
     <main>
       <h1>WebSocket / AsyncAPI docs</h1>
       <p>Raw spec: <a href="/ws-docs/asyncapi.yaml" target="_blank" rel="noreferrer">/ws-docs/asyncapi.yaml</a></p>
-      <div id="asyncapi-container"></div>
-      <pre id="asyncapi-fallback" style="display:none">Загрузка спецификации...</pre>
+      <p>
+        Swagger-подобный интерактивный просмотр:
+        <a id="studio-link" href="#" target="_blank" rel="noreferrer">Open AsyncAPI Studio</a>
+      </p>
+      <pre id="asyncapi-content">Загрузка спецификации...</pre>
     </main>
-    <script src="https://unpkg.com/@asyncapi/web-component@1.4.2/lib/asyncapi-web-component.js"></script>
     <script>
       const specUrl = "/ws-docs/asyncapi.yaml";
-      const container = document.getElementById("asyncapi-container");
-      const fallback = document.getElementById("asyncapi-fallback");
+      const content = document.getElementById("asyncapi-content");
+      const studioLink = document.getElementById("studio-link");
+      const absoluteSpecUrl = window.location.origin + specUrl;
 
-      function showFallback(text) {
-        if (container) {
-          container.style.display = "none";
-        }
-        if (fallback) {
-          fallback.style.display = "block";
-          fallback.textContent = text;
-        }
+      if (studioLink) {
+        studioLink.href =
+          "https://studio.asyncapi.com/?url=" + encodeURIComponent(absoluteSpecUrl);
       }
 
-      if (container) {
-        container.innerHTML =
-          '<asyncapi-component schema-url="' +
-          specUrl +
-          '" cssImportPath="https://unpkg.com/@asyncapi/web-component@1.4.2/lib/styles/default.min.css"></asyncapi-component>';
-      }
-
-      // Fallback на plain YAML, если компонент не загрузился или заблокирован.
-      setTimeout(() => {
-        if (!window.customElements || !window.customElements.get("asyncapi-component")) {
-          fetch(specUrl)
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error("HTTP " + response.status);
-              }
-              return response.text();
-            })
-            .then((text) => {
-              showFallback(text);
-            })
-            .catch((error) => {
-              showFallback("Не удалось загрузить AsyncAPI спецификацию: " + error.message);
-            });
-        }
-      }, 1200);
-
-      window.addEventListener("error", () => {
-        if (!window.customElements || !window.customElements.get("asyncapi-component")) {
-          fetch(specUrl)
-            .then((response) => response.text())
-            .then((text) => showFallback(text))
-            .catch((error) => {
-              showFallback("Не удалось загрузить AsyncAPI спецификацию: " + error.message);
-            });
-        }
-      });
+      fetch(specUrl)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+          }
+          return response.text();
+        })
+        .then((text) => {
+          if (content) {
+            content.textContent = text;
+          }
+        })
+        .catch((error) => {
+          if (content) {
+            content.textContent = "Не удалось загрузить AsyncAPI спецификацию: " + error.message;
+          }
+        });
     </script>
   </body>
 </html>`;
