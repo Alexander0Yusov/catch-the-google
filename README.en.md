@@ -3,7 +3,7 @@
 [Русская версия](./README.md)
 
 [![Frontend Deploy](https://img.shields.io/badge/frontend-GitHub%20Pages-222222?logo=github&logoColor=white)](https://alexander0yusov.github.io/catch-the-google/)
-[![Backend Deploy](https://img.shields.io/badge/backend-Render-46E3B7?logo=render&logoColor=black)](https://catch-the-google.onrender.com/health)
+[![Backend Deploy](https://img.shields.io/badge/backend-Render-46E3B7?logo=render&logoColor=black)](https://catch-the-google-backend.onrender.com/health)
 [![Status](https://img.shields.io/badge/status-active-success)](https://github.com/Alexander0Yusov/catch-the-google)
 [![License](https://img.shields.io/badge/license-ISC-blue)](./package.json)
 [![Node](https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white)](./.nvmrc)
@@ -13,7 +13,7 @@ A real-time multiplayer grid game where two players chase a Google unit that per
 ## Live Demo
 
 - Frontend (GitHub Pages): https://alexander0yusov.github.io/catch-the-google/
-- Backend health (Render): https://catch-the-google.onrender.com/health
+- Backend health (Render): https://catch-the-google-backend.onrender.com/health
 
 If your backend URL is different, update [config.js](./config.js).
 

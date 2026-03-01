@@ -150,6 +150,17 @@ const applySettings = async () => {
   await render();
 };
 
+const restartGame = async () => {
+  hideModals();
+  // Явно останавливаем текущий матч перед новым стартом,
+  // чтобы кнопка START GAME всегда запускала новый раунд.
+  await game.stop();
+  await applySettings();
+  await game.start();
+  await render();
+  startTimer();
+};
+
 const moveByRole = (code) => {
   const myPlayerId = Number(playerRoleSelect.value);
   if (myPlayerId === 0) {
@@ -188,10 +199,7 @@ const bootstrap = async () => {
 
   playAgainButtons.forEach((button) => {
     button.addEventListener("click", async () => {
-      hideModals();
-      await game.start();
-      await render();
-      startTimer();
+      await restartGame();
     });
   });
 
@@ -216,11 +224,7 @@ const bootstrap = async () => {
   startTimer();
 
   startButton.addEventListener("click", async () => {
-    hideModals();
-    await applySettings();
-    await game.start();
-    await render();
-    startTimer();
+    await restartGame();
   });
 };
 
