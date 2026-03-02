@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "catch-the-google",
   "version": "1.0.0",
   "description": "Мультиплеерная игра Catch The Google (WebSocket + Node.js + TypeScript)",
