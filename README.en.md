@@ -286,7 +286,18 @@ Protocol docs:
 
 ---
 
-## 5) Tests
+## 5) Development and Testing
+
+### Local run (dev)
+
+- Install dependencies: `npm install`
+- Build TypeScript into `dist`: `npm run build`
+- Start backend (WebSocket + HTTP): `npm run start:back`
+- Start frontend (static server): `npm run start:front`
+
+In local development, use two terminals:
+1. `npm run start:back`
+2. `npm run start:front`
 
 ### How to run
 
@@ -309,6 +320,10 @@ npm run test:e2e
 - `E2E` (real WebSocket server + client):
   - Match start via request/response protocol.
   - Role assignment for two clients (`Player 1` and `Player 2`).
+
+Test execution note:
+- You do not need to manually run backend/frontend for `Vitest`.
+- E2E tests start a test server programmatically inside the test process.
 
 ## 6) Linting and ESLint Rules
 

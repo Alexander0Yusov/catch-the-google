@@ -286,7 +286,18 @@ erDiagram
 
 ---
 
-## 5) Тесты
+## 5) Разработка и тесты
+
+### Локальный запуск (dev)
+
+- Установить зависимости: `npm install`
+- Сборка TypeScript в `dist`: `npm run build`
+- Запуск backend (WebSocket + HTTP): `npm run start:back`
+- Запуск frontend (статический сервер): `npm run start:front`
+
+Обычно в dev используются 2 терминала:
+1. `npm run start:back`
+2. `npm run start:front`
 
 ### Как запускать
 
@@ -309,6 +320,10 @@ npm run test:e2e
 - `E2E` (реальный WebSocket сервер + клиент):
   - Запуск матча через протокол request/response.
   - Выдача ролей двум клиентам (`Player 1` и `Player 2`).
+
+Важно по тестам:
+- Отдельно запускать backend/frontend для `Vitest` не нужно.
+- E2E-тесты поднимают тестовый сервер программно внутри тестового процесса.
 
 ## 6) Линтинг и правила ESLint
 
