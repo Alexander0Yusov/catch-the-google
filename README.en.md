@@ -34,6 +34,10 @@ If your backend URL is different, update [config.js](./config.js).
 - Match ends:
   - when someone reaches `pointsToWin`, or
   - when `gameDurationMs` expires.
+- Win condition:
+  - instant win if a player is first to reach `pointsToWin`;
+  - if time is over, the player with more points wins;
+  - equal score is treated as a draw.
 
 ### Key business rules in code
 
