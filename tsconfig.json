@@ -5,7 +5,7 @@
     "target": "ES2022",
     "outDir": "./dist",
     "baseUrl": "./",
-    "rootDir": "./",
+    "rootDir": "src",
     "sourceMap": true,
     "declaration": true,
     "removeComments": true,
@@ -25,6 +25,7 @@
     "**/*spec.ts",
     "front.ts",
     "game.ts",
-    "game-remote-proxy.ts"
+    "game-remote-proxy.ts",
+    "observer"
   ]
 }
