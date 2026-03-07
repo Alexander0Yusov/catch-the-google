@@ -65,6 +65,9 @@ export class GameRemoteProxy {
         await this.connect();
         const snapshot = await this.api.emitRequest("start");
         this.#mergeState(snapshot);
+        if (this.state.remainingTimeMs == null) {
+            this.state.remainingTimeMs = this.state.settings?.gameDurationMs ?? 0;
+        }
         this.eventEmitter.emit("change", this.state);
         return this.state;
     }
@@ -86,6 +89,7 @@ export class GameRemoteProxy {
         await this.connect();
         const snapshot = await this.api.emitRequest("setSettings", settings);
         this.#mergeState(snapshot);
+        this.state.remainingTimeMs = this.state.settings?.gameDurationMs ?? this.state.remainingTimeMs;
         this.eventEmitter.emit("change", this.state);
         return this.state;
     }
@@ -191,7 +195,12 @@ export class GameRemoteProxy {
         if (!snapshot) {
             return;
         }
-        this.state = { ...this.state, ...snapshot };
+        const merged = { ...this.state, ...snapshot };
+        if (snapshot.remainingTimeMs == null) {
+            merged.remainingTimeMs =
+                this.state.remainingTimeMs ?? this.state.settings?.gameDurationMs ?? 0;
+        }
+        this.state = merged;
     }
 }
 class Api {

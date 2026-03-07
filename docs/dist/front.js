@@ -173,7 +173,8 @@ const startTimer = () => {
         if (game.state.status !== "in-progress") {
             return;
         }
-        game.state.remainingTimeMs = Math.max((game.state.remainingTimeMs || 0) - 1000, 0);
+        const baseline = game.state.remainingTimeMs ?? game.state.settings?.gameDurationMs ?? 0;
+        game.state.remainingTimeMs = Math.max(baseline - 1000, 0);
         timeValue.textContent = formatMs(game.state.remainingTimeMs);
     }, 1000);
 };
