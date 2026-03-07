@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Catch The Google</title>
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="panel">
+        <h1>Catch The Google</h1>
+
+        <div class="controls">
+          <label>
+            Grid
+            <select id="grid-size-select">
+              <option value="4x4" selected>4x4</option>
+              <option value="5x5">5x5</option>
+              <option value="6x6">6x6</option>
+              <option value="7x7">7x7</option>
+            </select>
+          </label>
+
+          <label>
+            Points to win
+            <select id="points-to-win-select">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="20">20</option>
+            </select>
+          </label>
+
+          <label>
+            Time
+            <select id="time-select">
+              <option value="60000">1 min</option>
+              <option value="120000" selected>2 min</option>
+              <option value="180000">3 min</option>
+            </select>
+          </label>
+
+          <label>
+            Role
+            <select id="player-role-select">
+              <option value="1" selected>Player 1</option>
+              <option value="2">Player 2</option>
+              <option value="0">Spectator</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="buttons">
+          <button id="start-game-button" type="button">Start Game</button>
+          <button id="reset-game-button" type="button">Reset</button>
+          <button id="stop-game-button" type="button">Stop</button>
+        </div>
+
+        <div class="stats">
+          <div>Catch: <span id="catch-value">0</span></div>
+          <div>Enemy: <span id="enemy-value">0</span></div>
+          <div>Time: <span id="time-value">00:00</span></div>
+          <div id="status-bar">Status: pending</div>
+        </div>
+      </section>
+
+      <section class="board-wrap">
+        <table class="board">
+          <tbody id="grid-body"></tbody>
+        </table>
+        <p class="hint">Player 1: Arrow keys, Player 2: WASD</p>
+      </section>
+    </main>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script src="./js/main.js"></script>
+  </body>
+</html>

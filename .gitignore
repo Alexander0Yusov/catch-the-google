@@ -15,3 +15,5 @@ yarn-error.log*
 
 # Специфика Nest
 *.tsbuildinfo
+
+claude_desktop_config.json
