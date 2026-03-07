@@ -1,0 +1,25 @@
+node_modules
+
+# Заменяем .pnpm-store на кеш npm (если он есть)
+
+.npm
+
+# Файлы сборки
+
+dist
+build
+
+# Гит и логи
+
+.git
+\*.log
+
+# Заменяем pnpm-lock.yaml на файл блокировки npm
+
+package-lock.json
+
+# Исключаем также папки IDE и временные файлы
+
+.vscode
+.idea
+.env\*

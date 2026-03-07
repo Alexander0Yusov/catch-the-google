@@ -1,0 +1,3 @@
+export const GAME_SESSION_REPOSITORY = Symbol("GAME_SESSION_REPOSITORY");
+export const GAME_QUERY_REPOSITORY = Symbol("GAME_QUERY_REPOSITORY");
+export const EVENT_BUS = Symbol("EVENT_BUS");

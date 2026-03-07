@@ -1,18 +1,19 @@
-﻿services:
+services:
   - type: web
     name: catch-the-google-backend
     runtime: node
     plan: free
     autoDeploy: true
     buildCommand: npm install && npm run build
-    startCommand: npm run start:back
-    healthCheckPath: /health
+    startCommand: node dist/main.js
     envVars:
       - key: NODE_VERSION
-        value: 22
-      - key: DB_SSL
-        value: enable
-      - key: AUTO_RUN_MIGRATIONS
-        value: "false"
+        value: "22"
       - key: DATABASE_URL
         sync: false
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: CORS_ORIGIN
+        value: "*"

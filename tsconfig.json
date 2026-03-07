@@ -6,6 +6,8 @@
     "rootDir": ".",
     "outDir": "dist",
     "strict": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
@@ -15,6 +17,7 @@
     "types": ["node", "vitest/globals"]
   },
   "include": [
+    "src/**/*.ts",
     "back/**/*.ts",
     "domain/**/*.ts",
     "observer/**/*.ts",
