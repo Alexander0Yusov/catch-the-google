@@ -1,0 +1,31 @@
+.button {
+    display: inline-flex;
+    width: fit-content;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 24px;
+    padding: 12px 36px;
+    border-radius: 10px 2px;
+    border: 2px solid #75F94C;
+    background-color: #58BF39;
+    box-shadow: 0 4px 10px 2px rgba(88, 191, 57, 0.25), 0 -4px 10px 2px rgba(88, 191, 57, 0.25);
+    transition: background-color 0.3s ease 0s;
+    z-index: 20;
+}
+
+.button:hover {
+    background-color: #5dda3c;
+}
+
+.cell {
+    width: 85px;
+    height: 84px;
+    border-radius: 5px;
+    border: 2px solid #999B95;
+    background: rgba(110, 117, 102, 0.30);
+    cursor: pointer;
+    text-align: center;
+    vertical-align: middle;
+}
+

@@ -1,5 +1,7 @@
 node_modules/
 dist/
+!docs/dist/
+!docs/dist/**
 .env
 .DS_Store
 .idea/
