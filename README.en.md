@@ -8,324 +8,304 @@
 [![License](https://img.shields.io/badge/license-ISC-blue)](./package.json)
 [![Node](https://img.shields.io/badge/node-22-339933?logo=node.js&logoColor=white)](./.nvmrc)
 
-A multiplayer “tag” game on a grid where two players try to catch a Google unit that periodically jumps to a new cell.
+A multiplayer grid game where two players compete to catch the Google unit faster.
 
 ## Live Demo
 
 - Frontend (GitHub Pages): https://alexander0yusov.github.io/catch-the-google/
 - Backend health (Render): https://catch-the-google-backend.onrender.com/health
 
-If your backend URL is different, update [config.js](./config.js).
+If your backend URL is different, update [docs/config.js](./docs/config.js).
 
 ## 1) Game Description, Business Logic, and Technology Rationale
 
-### What the game does
+### Game behavior (actual rules)
 
 - The board size is `columns x rows`.
 - `Player 1`, `Player 2`, and `Google` are on the board at the same time.
-- Players move with arrow keys (role is selected in UI).
-- Players cannot move outside board borders.
-- Players cannot stand on the same cell.
-- If a player steps into Google’s cell, they get `+1` point.
-- After a catch, Google is moved to a new valid cell.
-- If Google is not caught during `googleJumpInterval`, it jumps automatically.
-- Turn order is `Player 1` -> `Player 2` -> repeat.
-- Delay between turns is controlled by `turnDelayMs` (default `250ms`).
-- Match ends:
-  - when someone reaches `pointsToWin`, or
-  - when `gameDurationMs` expires.
-- Win condition:
-  - instant win if a player is first to reach `pointsToWin`;
-  - if time is over, the player with more points wins;
-  - equal score is treated as a draw.
+- Players move independently; there is no turn-based queue now.
+- The faster player to reach Google gets the point.
+- Players cannot move outside the board.
+- Players cannot occupy the same cell.
+- If a player enters Google's cell, they get `+1` point.
+- After a catch:
+  - if `pointsToWin` is reached, the game finishes;
+  - otherwise Google jumps to a new valid cell.
+- The game supports `pause` and `resume`.
+- Google jumps on a server-side timer while the game is active.
 
 ### Key business rules in code
 
-- Domain logic is isolated in [game.ts](./game.ts) and does not depend on DOM/browser APIs.
-- Move validation:
-  - board borders (`#checkBorders`),
-  - target cell occupied by another player (`#checkOtherPlayer`).
-- Google catch and score updates (`#checkGoogleCatching`).
-- Game statuses: (`pending`, `in-progress`, `paused`, `finished`, `stopped`).
-- Timers:
-  - `setInterval` for Google jumps,
-  - `setTimeout` for match timeout.
-- Turn flow:
-  - `firstTurnPlayerId=1` means Player 1 starts;
-  - after a successful move, active player is switched;
-  - next move is allowed only after `turnDelayMs`.
+- Domain model is isolated in `src/modules/game/domain`.
+- Moves are allowed only in `in-progress` status.
+- Coordinate validation is centralized in `Position.create(...)`.
+- A player cannot move into another player's cell (`Player.move(...)`).
+- Catch logic is checked in `Game.catch(playerId)` after movement.
+- Domain events (`game-started`, `google-jumped`, `google-caught`, `game-finished`) are published from use cases to event bus.
 
 ### Why these technologies
 
-- **WebSocket (`ws`)**: real-time bidirectional channel for synchronized multiplayer state.
-- **Remote Proxy**: frontend uses the same API while logic runs remotely.
-- **EventEmitter (Observer)**: domain publishes events, server broadcasts them to all clients.
-- **Node.js backend**: single source of truth for positions/scores/status.
-- **PostgreSQL (Neon)**: stores game sessions and match events.
+- **NestJS**: modular structure, DI, clean application composition.
+- **Socket.IO Gateway**: realtime channel between frontend and backend.
+- **DDD + Clean Architecture**: business rules in domain, orchestration in application, adapters in infrastructure.
+- **PostgreSQL (Neon) + `pg`**: session/score persistence with in-memory fallback.
+- **Vitest + Playwright**: unit/integration/e2e coverage.
 
-### Situational use of technologies
-
-- **Observer** is used when state changes independently from a specific client (e.g. Google timer).
-- **WebSocket broadcast** is used when an action in one browser must instantly appear in another.
-- **Remote Proxy** is useful when UI stays thin and business logic is moved to backend.
-- **Database** adds portfolio value: match history, analytics, and leaderboard-ready data.
-
-### Data exchange flow
+### Data flow
 
 ```mermaid
 sequenceDiagram
-  participant U as User (Browser A/B)
-  participant UI as UI/Controller (front.ts -> dist/front.js)
-  participant RP as GameRemoteProxy
-  participant WS as WebSocket Server (Render, back/server.ts -> dist/back/server.js)
-  participant D as Game Domain (game.ts -> dist/game.js)
-  participant DB as Neon PostgreSQL
+  participant UI as Browser UI
+  participant GW as GameGateway (Socket.IO)
+  participant UC as UseCase
+  participant REPO as PostgresGameRepository
+  participant DOM as Game (Domain)
+  participant BUS as EventEmitterBus
 
-  U->>UI: Key press (move)
-  UI->>RP: movePlayerX...
-  RP->>WS: request {procedure, requestId}
-  WS->>D: execute domain procedure
-  D-->>WS: new state + domain events
-  WS->>DB: save event/score (optional)
-  WS-->>RP: response {result}
-  WS-->>RP: event(change)
-  RP-->>UI: emit("change")
-  UI-->>U: rerender board/score
+  UI->>GW: request {procedure, payload, requestId}
+  GW->>UC: execute(command/query)
+  UC->>REPO: getById(gameId)
+  REPO-->>UC: Game
+  UC->>DOM: business method (start/move/catch/...)
+  DOM-->>UC: domain events
+  UC->>BUS: publish(event)
+  UC->>REPO: save(gameId, game)
+  GW-->>UI: response {result}
+  GW-->>UI: event(change + domain events)
 ```
 
 ---
 
 ## 2) Technology Stack
 
-- **Frontend**: HTML, CSS, TypeScript (source `.ts`) + build output in `dist/*.js`
-- **Backend**: Node.js runtime + TypeScript source files
-- **Realtime**: `ws` (WebSocket)
-- **Architecture patterns**: lightweight MVC, Observer, Remote Proxy
-- **Database**: PostgreSQL (Neon), `pg`
-- **Code quality**: ESLint (TS + JS)
-- **Testing**: `Vitest` (unit/integration/e2e), `ws` (e2e client)
-- **Audio**: HTMLAudioElement + Web Audio fallback (`get-low.mp3`, low volume, via `Sound on`)
-- **Backend deploy**: Render
-- **Frontend deploy**: GitHub Pages
+- **Backend**: NestJS, TypeScript, Node.js
+- **Realtime**: Socket.IO (`@nestjs/websockets`, `@nestjs/platform-socket.io`)
+- **Architecture**: Clean Architecture + DDD
+- **Persistence**: PostgreSQL (Neon), `pg` (TypeORM is not used)
+- **Config/validation**: `@nestjs/config` + `joi`
+- **Testing**: Vitest, Playwright
+- **Code quality**: ESLint
+- **Frontend**: static files in `docs/` (GitHub Pages)
 
 ---
 
 ## 3) Project Structure, Dependencies, and DB
 
-### Project folders
+### Project folders (current)
 
 ```text
 CatchTheGoogle/
-  assets/
-    audio/
-      README.txt
-  back/
-    migrations/
-      001_init_2.sql
-    db.ts
-    server.ts
-  css/
-    common.css
-    null.css
-    style.css
-  dist/
-    back/
-      db.js
-      server.js
-    domain/
-      Google.js
-      NumberUtil.js
-      Player.js
-      Position.js
-      Unit.js
-    observer/
-      EventEmitter.js
-    front.js
-    game-remote-proxy.js
-    game.js
-  docs/
-    api/
-      asyncapi.yaml
-      openapi.yaml
-    screenshots/
-      .gitkeep
-      gameplay-start.png
-      gameplay-win.png
-      gameplay.png
-  domain/
-    Google.ts
-    NumberUtil.ts
-    Player.ts
-    Position.ts
-    Unit.ts
-  img/
-  js/
-    script.js
-  observer/
-    EventEmitter.ts
+  docs/                     # frontend (static client)
+    index.html
+    config.js
+    dist/
   scripts/
     check-migrations.mjs
+  src/
+    main.ts
+    app.module.ts
+    modules/
+      game/
+        game.module.ts
+        domain/
+          entities/
+          value-objects/
+          services/
+          events/
+          enums/
+          types/
+        application/
+          contracts/
+          usecases/
+          mappers/
+        infrastructure/
+          postgres-game.repository.ts
+          event-emitter.bus.ts
+        interface/
+          game.gateway.ts
   tests/
-    e2e/
-    integration/
     unit/
-  config.js
-  front.ts
-  game-remote-proxy.ts
-  game.ts
-  index.html
-  package.json
-  render.yaml
-  README.md
-  README.en.md
-  tsconfig.json
+    integration/
+    e2e/
+  src/test/e2e/
+  playwright.config.ts
   vitest.config.ts
+  package.json
+  README.md
 ```
 
-### Module dependency graph
+### Module relations
 
 ```mermaid
 graph TD
-  UI[index.html + dist/front.js] --> RP[dist/game-remote-proxy.js]
-  RP --> WS[dist/back/server.js]
-  WS --> GAME[dist/game.js]
-  GAME --> OBS[dist/observer/EventEmitter.js]
-  GAME --> DOMAIN[dist/domain/*]
-  WS --> DB[dist/back/db.js]
-  DB --> SQL[back/migrations/001_init_2.sql]
+  Main[main.ts] --> AppModule[app.module.ts]
+  AppModule --> GameModule[game.module.ts]
+  GameModule --> Gateway[interface/game.gateway.ts]
+  GameModule --> UCs[application/usecases/*]
+  GameModule --> Repo[infrastructure/postgres-game.repository.ts]
+  GameModule --> Bus[infrastructure/event-emitter.bus.ts]
+  UCs --> Contracts[application/contracts/*]
+  UCs --> Domain[domain/*]
+  UCs --> Mapper[application/mappers/game-snapshot.mapper.ts]
+  Repo --> Domain
+  Gateway --> UCs
+  Gateway --> Repo
+  Gateway --> Bus
 ```
 
-### Domain class dependencies
+### Full class/interface map
 
-```mermaid
-classDiagram
-  class Game {
-    -status
-    -settings
-    -player1
-    -player2
-    -google
-    -score
-    +start()
-    +stop()
-    +pause()
-    +resume()
-    +setSettings()
-    +getSnapshot()
-    +movePlayer1...()
-    +movePlayer2...()
-  }
-  class Unit {
-    +position
-  }
-  class Player {
-    +id
-  }
-  class Google
-  class Position {
-    +x
-    +y
-    +clone()
-    +equal()
-  }
+#### Composition Root
 
-  Game --> Player
-  Game --> Google
-  Game --> Position
-  Player --|> Unit
-  Google --|> Unit
-```
+- `AppModule` (`src/app.module.ts`)
+  - Imports global `ConfigModule` and `GameModule`.
+  - Validates env: `NODE_ENV`, `DATABASE_URL`, `PORT`, `CORS_ORIGIN`.
+- `GameModule` (`src/modules/game/game.module.ts`)
+  - Registers DI tokens:
+    - `GAME_SESSION_REPOSITORY -> PostgresGameRepository`
+    - `GAME_QUERY_REPOSITORY -> PostgresGameRepository`
+    - `EVENT_BUS -> EventEmitterBus`
+  - Registers all use cases and `GameGateway`.
 
-### DB structure and relations
+#### Interface Layer
 
-All table names use `_2` suffix.
+- `GameGateway` (`interface/game.gateway.ts`)
+  - Implements `OnGatewayConnection`, `OnGatewayDisconnect`.
+  - Calls use cases: `start`, `move`, `stop`, `pause`, `resume`, `setSettings`, `getSnapshot`.
+  - Accepts procedures:
+    - `joinGame`, `start`, `stop`, `pause`, `resume`, `setSettings`, `getSnapshot`
+    - `movePlayer1Up/Down/Left/Right`, `movePlayer2Up/Down/Left/Right`
+  - Broadcasts:
+    - `event(change)` with snapshot
+    - `game-started`, `google-jumped`, `google-caught`, `game-finished`
 
-- `players_2` — player directory table
-- `game_sessions_2` — match sessions
-- `game_events_2` — event stream inside a session
-- `scores_2` — current player scores in a session
+#### Application Layer
+
+- Contracts (`application/contracts`):
+  - `IEventBus`
+  - `IGameSessionRepository`
+  - `IGameQueryRepository`
+  - tokens `GAME_SESSION_REPOSITORY`, `GAME_QUERY_REPOSITORY`, `EVENT_BUS`
+- Use cases (`application/usecases`):
+  - `StartGameUseCase`
+  - `MovePlayerUseCase`
+  - `StopGameUseCase`
+  - `PauseGameUseCase`
+  - `ResumeGameUseCase`
+  - `SetSettingsUseCase`
+  - `GetSnapshotQueryHandler`
+- Mapper:
+  - `gameSnapshotMapper(game): GameSnapshotDto`
+
+#### Domain Layer
+
+- `Game`:
+  - lifecycle: `start`, `stop`, `pause`, `resume`, `finish`
+  - gameplay: `move`, `catch`, `jumpGoogle`, `setGooglePosition`
+  - read: `getStatus`, `getPlayer`, `getGooglePosition`, `getGridSize`, `getSettings`, `getScore`
+- `Player`: `move`, `addPoint`, `resetPoints`, `setPosition`
+- `Position`: `create`, `move`, `equals`
+- `GooglePositionDomainService`: `nextPosition`
+- `GameStatus`: `pending`, `in-progress`, `paused`, `finished`, `stopped`
+- Domain events:
+  - `GameStartedEvent`
+  - `GoogleJumpedEvent`
+  - `GoogleCaughtEvent`
+  - `GameFinishedEvent`
+
+#### Infrastructure Layer
+
+- `EventEmitterBus`
+  - `IEventBus` implementation using `node:events`
+- `PostgresGameRepository`
+  - implements `IGameSessionRepository`, `IGameQueryRepository`
+  - modes:
+    - PostgreSQL mode (when `DATABASE_URL` and schema are available)
+    - in-memory fallback mode
+
+### DB structure
+
+Repository expects `_2` tables:
+
+- `players_2`
+- `game_sessions_2`
+- `game_events_2`
+- `scores_2`
 
 ```mermaid
 erDiagram
-  players_2 ||--o{ game_sessions_2 : winner_player_id
-  game_sessions_2 ||--o{ game_events_2 : session_token
   players_2 ||--o{ scores_2 : player_id
   game_sessions_2 ||--o{ scores_2 : session_token
+  game_sessions_2 ||--o{ game_events_2 : session_token
 ```
 
 ---
 
-## 4) Frontend ↔ Backend Flow
+## 4) Frontend - Backend Flow
 
-Game communication is fully **WebSocket-based**. HTTP is used for health-check only.
+### HTTP
 
-### HTTP (minimal)
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/health` | backend health check |
 
-| Step | Method/Path | Sender | Body | Response |
-|---|---|---|---|---|
-| 1 | `GET /health` | Render health-check / browser | none | `{ ok: true, service: "catch-the-google-backend" }` |
+### WebSocket (Socket.IO)
 
-### WebSocket (main protocol)
+Client sends `request`:
 
-| Order | Channel | From -> To | Message | Server action | Response |
-|---|---|---|---|---|---|
-| 1 | WS connect | Front -> Back | handshake | register connection | `event(change)` with current snapshot |
-| 2 | request | Front -> Back | `{ type: "request", requestId, procedure: "joinGame", payload }` | assign player role | `response { result: { playerId } }` |
-| 3 | request | Front -> Back | `procedure: "setSettings"` | update match settings | `response { result: snapshot }` |
-| 4 | request | Front -> Back | `procedure: "start"` | create units, start timers | `response { result: snapshot }` |
-| 5 | request | Front -> Back | `procedure: "movePlayer..."` | validate move and update state | `response { result: snapshot }` |
-| 6 | event | Back -> Front(all) | `{ type: "event", eventName: "change", data }` | broadcast updates to all clients | UI rerenders board/score |
-| 7 | event | Back -> Front(all) | `eventName: "googleCaught"/"finished"` | domain event broadcast | UI shows result/modal |
-| 8 | request | Front -> Back | `procedure: "stop"` | stop match | `response { result: snapshot }` |
+```json
+{ "type": "request", "requestId": "...", "procedure": "start", "payload": {} }
+```
 
-Protocol docs:
-- HTTP docs UI: `GET /api-docs` (Render: https://catch-the-google-backend.onrender.com/api-docs)
-- WebSocket docs UI: `GET /ws-docs` (Render: https://catch-the-google-backend.onrender.com/ws-docs)
-- HTTP/OpenAPI spec: [openapi.yaml](./docs/api/openapi.yaml)
-- WebSocket/AsyncAPI spec: [asyncapi.yaml](./docs/api/asyncapi.yaml)
+Server sends `response`:
+
+```json
+{ "type": "response", "requestId": "...", "procedure": "start", "result": { "status": "in-progress" } }
+```
+
+Server broadcasts:
+
+- `event` with `eventName: "change"` and snapshot
+- `game-started`
+- `google-jumped`
+- `google-caught`
+- `game-finished`
 
 ---
 
 ## 5) Development and Testing
 
-### Local run (dev)
-
-- Install dependencies: `npm install`
-- Build TypeScript into `dist`: `npm run build`
-- Start backend (WebSocket + HTTP): `npm run start:back`
-- Start frontend (static server): `npm run start:front`
-
-In local development, use two terminals:
-1. `npm run start:back`
-2. `npm run start:front`
-
-### How to run
+### Local run
 
 ```bash
+npm install
 npm run build
+npm run start:back
+npm run start:front
+```
+
+### Test commands
+
+```bash
 npm test
 npm run test:unit
 npm run test:integration
 npm run test:e2e
 ```
 
-### Test suites and cases
+### Current check status (verified locally)
 
-- `Unit`:
-  - `Position.clone/equal` — coordinate copy and comparison correctness.
-  - `EventEmitter` — event delivery and unsubscribe behavior.
-- `Integration`:
-  - `Game.start` — unit initialization and unique positions.
-  - Turn order + `turnDelayMs` — early/wrong-player move blocking.
-- `E2E` (real WebSocket server + client):
-  - Match start via request/response protocol.
-  - Role assignment for two clients (`Player 1` and `Player 2`).
+- `npm run build:ts` passes.
+- `npm run lint` passes (warnings only, no errors).
+- `npm run check:migrations` passes.
+- `npm test` passes.
+- `npm run test:unit` passes.
+- `npm run test:integration` passes.
+- `npm run test:e2e` passes.
 
-Test execution note:
-- You do not need to manually run backend/frontend for `Vitest`.
-- E2E tests start a test server programmatically inside the test process.
+---
 
-## 6) Linting and ESLint Rules
+## 6) Linting and Checks
 
 ### Commands
 
@@ -333,65 +313,48 @@ Test execution note:
 npm run lint
 npm run lint:fix
 npm run check:migrations
+npm run build:ts
 ```
 
-### Key rules and purpose
+Migration note:
 
-| Rule | Why |
-|---|---|
-| `eqeqeq` | prevents implicit type coercion in critical game logic |
-| `@typescript-eslint/no-unused-vars` | removes dead code and unused parameters |
-| `import/order` | keeps imports stable for easier diffs/reviews |
-| `@typescript-eslint/consistent-type-imports` | makes TS imports predictable and cleaner |
-| `no-console` = off (intentional) | server logs are required for deploy/WS diagnostics |
+- `check:migrations` validates `back/migrations/001_init_2.sql`.
+- The migration exists and contains required `_2` table fragments.
 
 ---
 
 ## 7) Why GitHub Pages + Render and How to Deploy
 
-### Why this deployment setup
+### Why this setup
 
-- **GitHub Pages** is a good fit for static frontend: simple, free, portfolio-friendly.
-- **Render** is suitable for a long-running backend process with WebSocket and health-check.
-- **Neon** provides managed PostgreSQL without running your own DB server.
+- **GitHub Pages**: static frontend hosting.
+- **Render**: runtime for NestJS + Socket.IO backend.
+- **Neon**: managed PostgreSQL for production.
 
-### Quick guide
+### Backend (Render)
 
-#### Backend (Render)
+1. Create a service from this repository.
+2. Set env variables:
+   - `NODE_ENV=production`
+   - `DATABASE_URL`
+   - `PORT`
+   - `CORS_ORIGIN`
+3. Check `/health`.
 
-1. In Render: `New + -> Blueprint`.
-2. Select this repository.
-3. Render reads [render.yaml](./render.yaml).
-4. Add Neon connection in env:
-   - either `DATABASE_URL`
-   - or `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DATABASE`
-5. Keep `AUTO_RUN_MIGRATIONS=false` (default) to avoid changing existing tables.
-6. Verify `https://<service>.onrender.com/health`.
+### Frontend (GitHub Pages)
 
-#### Frontend (GitHub Pages)
-
-1. Set backend URL in [config.js](./config.js):
+1. Set `window.GAME_WS_URL` in [docs/config.js](./docs/config.js):
 
 ```js
 window.GAME_WS_URL = "wss://<your-render-service>.onrender.com";
 ```
 
-2. Push changes to `main`.
-3. GitHub: `Settings -> Pages -> Deploy from branch`.
-4. Branch: `main`, folder: `/ (root)`.
+2. Deploy `docs/` to GitHub Pages.
 
 ---
 
 ## 8) Screenshots
 
-### Gameplay start
+There is currently no `docs/screenshots` folder or PNG screenshots in the repository.
 
-![Gameplay start](./docs/screenshots/gameplay-start.png)
-
-### Gameplay win state
-
-![Gameplay win state](./docs/screenshots/gameplay-win.png)
-
-### Gameplay (main)
-
-![Gameplay main](./docs/screenshots/gameplay.png)
+Available frontend assets are in `docs/img` and `docs/img/icons`.
