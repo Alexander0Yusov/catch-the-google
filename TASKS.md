@@ -1,4 +1,4 @@
-# План миграции к Clean Architecture (DDD) для CatchTheGoogle
+﻿# План миграции к Clean Architecture (DDD) для CatchTheGoogle
 
 Цель: перевести текущую реализацию из плоской структуры (`game.ts`, `back/server.ts`, `back/db.ts`) в модульную архитектуру по `AGENTS.md` с четкими слоями `Domain / Application / Infrastructure` (и тонким Interface).
 

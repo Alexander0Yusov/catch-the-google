@@ -1,4 +1,4 @@
-# Game Module
+﻿# Game Module
 
 Module structure follows Clean Architecture:
 
