@@ -81,16 +81,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: Socket): void {
-    const role = this.clientRoles.get(client.id);
-
-    if (role === 1 && this.playerOwners[1] === client.id) {
-      this.playerOwners[1] = null;
-    }
-
-    if (role === 2 && this.playerOwners[2] === client.id) {
-      this.playerOwners[2] = null;
-    }
-
+    this.releaseOwnedSlots(client.id);
     this.clientRoles.delete(client.id);
   }
 
@@ -225,7 +216,17 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private assignRole(clientId: string, preferredPlayerId: number): 0 | 1 | 2 {
-    if ((preferredPlayerId === 1 || preferredPlayerId === 2) && !this.playerOwners[preferredPlayerId]) {
+    this.releaseOwnedSlots(clientId);
+
+    if (preferredPlayerId === 0) {
+      this.clientRoles.set(clientId, 0);
+      return 0;
+    }
+
+    if (
+      (preferredPlayerId === 1 || preferredPlayerId === 2) &&
+      !this.playerOwners[preferredPlayerId]
+    ) {
       this.playerOwners[preferredPlayerId] = clientId;
       this.clientRoles.set(clientId, preferredPlayerId);
       return preferredPlayerId;
@@ -249,15 +250,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private checkMovePermission(clientId: string, playerId: 1 | 2): void {
     const role = this.clientRoles.get(clientId) ?? 0;
-    const ownsAtLeastOne = this.playerOwners[1] === clientId || this.playerOwners[2] === clientId;
-    const secondSeatIsFree = !this.playerOwners[1] || !this.playerOwners[2];
 
-    if (ownsAtLeastOne && secondSeatIsFree) {
-      return;
+    if (role === 0) {
+      throw new Error(`Spectator cannot control Player ${playerId}`);
+    }
+  }
+
+  private releaseOwnedSlots(clientId: string): void {
+    if (this.playerOwners[1] === clientId) {
+      this.playerOwners[1] = null;
     }
 
-    if (role !== playerId) {
-      throw new Error(`This connection does not control Player ${playerId}`);
+    if (this.playerOwners[2] === clientId) {
+      this.playerOwners[2] = null;
     }
   }
 

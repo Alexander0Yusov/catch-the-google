@@ -38,4 +38,12 @@ export class Player {
   addPoint(): void {
     this._points += 1;
   }
+
+  resetPoints(): void {
+    this._points = 0;
+  }
+
+  setPosition(position: Position): void {
+    this._position = position;
+  }
 }

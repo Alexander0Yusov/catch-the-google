@@ -143,6 +143,12 @@ export class Game {
   }
 
   stop(): void {
+    const defaults = this.#buildDefaultPositions(this.settings.gridSize);
+    this.player1.setPosition(defaults.player1);
+    this.player2.setPosition(defaults.player2);
+    this.googlePosition = defaults.google;
+    this.player1.resetPoints();
+    this.player2.resetPoints();
     this.status = GameStatus.Stopped;
   }
 
@@ -176,10 +182,7 @@ export class Game {
       : this.settings.gridSize;
 
     validateGridSize(mergedGridSize);
-
-    Position.create(this.player1.position.x, this.player1.position.y, mergedGridSize);
-    Position.create(this.player2.position.x, this.player2.position.y, mergedGridSize);
-    Position.create(this.googlePosition.x, this.googlePosition.y, mergedGridSize);
+    this.#normalizePositionsForGrid(mergedGridSize);
 
     this.settings = {
       pointsToWin: nextSettings.pointsToWin ?? this.settings.pointsToWin,
@@ -223,6 +226,12 @@ export class Game {
     this.addEvent(
       new GoogleCaughtEvent(player.id, player.points, this.googlePosition)
     );
+
+    if (player.points >= this.settings.pointsToWin) {
+      this.finish(player.id);
+      return true;
+    }
+
     this.jumpGoogle(this.#defaultRandomIndex);
     return true;
   }
@@ -276,5 +285,63 @@ export class Game {
 
   #defaultRandomIndex(maxExclusive: number): number {
     return Math.floor(Math.random() * maxExclusive);
+  }
+
+  #buildDefaultPositions(gridSize: GridSize): {
+    player1: Position;
+    player2: Position;
+    google: Position;
+  } {
+    const player1 = Position.create(1, 1, gridSize);
+    const player2 = Position.create(gridSize.columns, gridSize.rows, gridSize);
+
+    let google = Position.create(
+      Math.min(2, gridSize.columns),
+      Math.min(2, gridSize.rows),
+      gridSize
+    );
+
+    if (google.equals(player1) || google.equals(player2)) {
+      google = GooglePositionDomainService.nextPosition({
+        gridSize,
+        playerPositions: [player1, player2],
+        currentGooglePosition: google,
+        randomIndex: this.#defaultRandomIndex,
+      });
+    }
+
+    return { player1, player2, google };
+  }
+
+  #normalizePositionsForGrid(gridSize: GridSize): void {
+    const player1Position = this.player1.position;
+    const player2Position = this.player2.position;
+    const googlePosition = this.googlePosition;
+
+    const validLayout =
+      this.#isInsideGrid(player1Position, gridSize) &&
+      this.#isInsideGrid(player2Position, gridSize) &&
+      this.#isInsideGrid(googlePosition, gridSize) &&
+      !player1Position.equals(player2Position) &&
+      !googlePosition.equals(player1Position) &&
+      !googlePosition.equals(player2Position);
+
+    if (validLayout) {
+      return;
+    }
+
+    const defaults = this.#buildDefaultPositions(gridSize);
+    this.player1.setPosition(defaults.player1);
+    this.player2.setPosition(defaults.player2);
+    this.googlePosition = defaults.google;
+  }
+
+  #isInsideGrid(position: Position, gridSize: GridSize): boolean {
+    return (
+      position.x >= 1 &&
+      position.x <= gridSize.columns &&
+      position.y >= 1 &&
+      position.y <= gridSize.rows
+    );
   }
 }

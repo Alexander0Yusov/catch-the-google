@@ -41,7 +41,7 @@ export class GameRemoteProxy {
             this.api = new Api(this.socket);
             this.api.on("event", (message) => {
                 if (message.eventName === "change" && message.data?.state) {
-                    this.state = { ...this.state, ...message.data.state };
+                    this.#mergeState(message.data.state);
                     this.eventEmitter.emit("change", this.state);
                 }
             });
