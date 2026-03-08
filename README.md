@@ -1,4 +1,4 @@
-# Catch The Google
+﻿# Catch The Google
 
 [English version](./README.en.md)
 
@@ -23,32 +23,32 @@
 
 - Поле имеет размер `columns x rows`.
 - На поле одновременно находятся `Player 1`, `Player 2` и `Google`.
-- Игроки двигаются независимо друг от друга. Пошаговой очереди ходов сейчас нет.
-- Результат определяется скоростью действий: кто быстрее добегает до клетки Google, тот получает очко.
+- Игроки двигаются независимо друг от друга, пошаговой очереди ходов нет.
+- Кто быстрее добегает до клетки Google, тот получает очко.
 - Игроки не могут выходить за границы поля.
 - Игроки не могут занимать одну и ту же клетку.
 - Если игрок входит в клетку Google, он получает `+1` очко.
 - После поимки Google:
   - если достигнут `pointsToWin`, игра завершается;
   - иначе Google прыгает в новую валидную клетку.
-- Матч может быть остановлен, поставлен на паузу и возобновлен.
-- Google прыгает по таймеру на серверной стороне при активной игре (интервал из настроек).
+- Игра поддерживает `pause` и `resume`.
+- Google прыгает по серверному таймеру при активной игре.
 
 ### Ключевые бизнес-правила в коде
 
 - Доменная модель изолирована в `src/modules/game/domain`.
 - Движение разрешено только в статусе `in-progress`.
-- Проверка корректности координат централизована в `Position.create(...)`.
+- Проверка координат централизована в `Position.create(...)`.
 - Нельзя занять клетку другого игрока (`Player.move(...)`).
-- Поимка Google проверяется в `Game.catch(playerId)` сразу после перемещения.
-- События домена (`game-started`, `google-jumped`, `google-caught`, `game-finished`) публикуются из use case в event bus.
+- Поимка Google проверяется в `Game.catch(playerId)` после перемещения.
+- Доменные события (`game-started`, `google-jumped`, `google-caught`, `game-finished`) публикуются из use cases в event bus.
 
 ### Почему применены именно эти технологии
 
-- **NestJS**: модульность, DI-контейнер, удобная реализация Clean Architecture.
-- **Socket.IO Gateway**: стабильный realtime-канал фронт <-> сервер.
+- **NestJS**: модульность, DI, удобная реализация Clean Architecture.
+- **Socket.IO Gateway**: realtime-канал фронт <-> сервер.
 - **DDD + Clean Architecture**: бизнес-правила в domain, orchestration в application, адаптеры в infrastructure.
-- **PostgreSQL (Neon) + TypeORM/pg-подход в инфраструктуре**: хранение сессий и счета; fallback в in-memory при отсутствии DB.
+- **PostgreSQL (Neon) + `pg`**: хранение сессий и счета; fallback в in-memory при отсутствии DB.
 - **Vitest + Playwright**: покрытие unit/integration/e2e.
 
 ### Flow обмена данными
@@ -81,7 +81,7 @@ sequenceDiagram
 - **Backend**: NestJS, TypeScript, Node.js
 - **Realtime**: Socket.IO (`@nestjs/websockets`, `@nestjs/platform-socket.io`)
 - **Архитектура**: Clean Architecture + DDD
-- **Persistence**: PostgreSQL (Neon), `pg`
+- **Persistence**: PostgreSQL (Neon), `pg` (TypeORM не используется)
 - **Конфигурация/валидация env**: `@nestjs/config` + `joi`
 - **Тесты**: Vitest, Playwright
 - **Качество кода**: ESLint
@@ -127,6 +127,7 @@ CatchTheGoogle/
     unit/
     integration/
     e2e/
+  src/test/e2e/
   playwright.config.ts
   vitest.config.ts
   package.json
@@ -160,68 +161,53 @@ graph TD
   - Импортирует `ConfigModule` (global) и `GameModule`.
   - Валидирует env: `NODE_ENV`, `DATABASE_URL`, `PORT`, `CORS_ORIGIN`.
 - `GameModule` (`src/modules/game/game.module.ts`)
-  - Регистрирует провайдеры и DI-токены:
+  - Регистрирует DI-токены:
     - `GAME_SESSION_REPOSITORY -> PostgresGameRepository`
     - `GAME_QUERY_REPOSITORY -> PostgresGameRepository`
     - `EVENT_BUS -> EventEmitterBus`
-  - Регистрирует все use case классы и `GameGateway`.
+  - Регистрирует use case классы и `GameGateway`.
 
 #### Interface Layer
 
 - `GameGateway` (`interface/game.gateway.ts`)
   - Реализует `OnGatewayConnection`, `OnGatewayDisconnect`.
-  - Зависит от:
-    - `StartGameUseCase`, `MovePlayerUseCase`, `StopGameUseCase`, `PauseGameUseCase`, `ResumeGameUseCase`, `SetSettingsUseCase`, `GetSnapshotQueryHandler`
-    - `IGameSessionRepository`
-    - `EventEmitterBus`
-    - `ConfigService`
-  - Протокол процедур:
+  - Вызывает use cases: `start`, `move`, `stop`, `pause`, `resume`, `setSettings`, `getSnapshot`.
+  - Принимает WS-процедуры:
     - `joinGame`, `start`, `stop`, `pause`, `resume`, `setSettings`, `getSnapshot`
     - `movePlayer1Up/Down/Left/Right`, `movePlayer2Up/Down/Left/Right`
-  - Публикует во все клиенты:
+  - Публикует клиентам:
     - `event(change)` со snapshot
-    - доменные события `game-started`, `google-jumped`, `google-caught`, `game-finished`
+    - `game-started`, `google-jumped`, `google-caught`, `game-finished`
 
 #### Application Layer
 
 - Контракты (`application/contracts`):
-  - `IEventBus`: `publish(event)`
-  - `IGameSessionRepository`: `getById`, `save`
-  - `IGameQueryRepository`: `getById`
-  - `tokens.ts`: `GAME_SESSION_REPOSITORY`, `GAME_QUERY_REPOSITORY`, `EVENT_BUS`
+  - `IEventBus`
+  - `IGameSessionRepository`
+  - `IGameQueryRepository`
+  - токены `GAME_SESSION_REPOSITORY`, `GAME_QUERY_REPOSITORY`, `EVENT_BUS`
 - Use cases (`application/usecases`):
-  - `StartGameUseCase`: `Game.start()` -> publish events -> save
-  - `MovePlayerUseCase`: `Game.move()` + `Game.catch()` -> publish events -> save
-  - `StopGameUseCase`: `Game.stop()` -> publish events -> save
-  - `PauseGameUseCase`: `Game.pause()` -> publish events -> save
-  - `ResumeGameUseCase`: `Game.resume()` -> publish events -> save
-  - `SetSettingsUseCase`: `Game.setSettings()` -> publish events -> save
-  - `GetSnapshotQueryHandler`: читает игру через `IGameQueryRepository` и маппит в DTO
-- Mapper (`application/mappers/game-snapshot.mapper.ts`):
-  - `gameSnapshotMapper(game: Game): GameSnapshotDto`
-  - Формирует transport-friendly DTO для клиента.
+  - `StartGameUseCase`
+  - `MovePlayerUseCase`
+  - `StopGameUseCase`
+  - `PauseGameUseCase`
+  - `ResumeGameUseCase`
+  - `SetSettingsUseCase`
+  - `GetSnapshotQueryHandler`
+- Mapper:
+  - `gameSnapshotMapper(game): GameSnapshotDto`
 
 #### Domain Layer
 
-- `Game` (`domain/entities/game.entity.ts`)
-  - Центральный агрегат: статус, настройки, игроки, позиция Google, domain events.
-  - Зависит от: `Player`, `Position`, `GooglePositionDomainService`, `GameStatus`, domain event classes.
-  - Методы:
-    - lifecycle: `start`, `stop`, `pause`, `resume`, `finish`
-    - config: `setSettings`
-    - gameplay: `move`, `catch`, `jumpGoogle`, `setGooglePosition`
-    - read: `getStatus`, `getPlayer`, `getGooglePosition`, `getGridSize`, `getSettings`, `getScore`, `getDomainEvents`, `clearDomainEvents`
-- `Player` (`domain/entities/player.entity.ts`)
-  - Состояние: `id`, `position`, `points`.
-  - Методы: `move`, `addPoint`, `resetPoints`, `setPosition`.
-- `Position` (`domain/value-objects/position.value-object.ts`)
-  - Immutable VO координат.
-  - Методы: `create`, `move`, `equals`.
-- `GooglePositionDomainService` (`domain/services/google-position.domain-service.ts`)
-  - Вычисляет следующую позицию Google с исключением занятых клеток.
-- `GameStatus` (`domain/enums/game-status.enum.ts`)
-  - `pending`, `in-progress`, `paused`, `finished`, `stopped`.
-- Domain events (`domain/events/*`):
+- `Game`:
+  - lifecycle: `start`, `stop`, `pause`, `resume`, `finish`
+  - gameplay: `move`, `catch`, `jumpGoogle`, `setGooglePosition`
+  - read: `getStatus`, `getPlayer`, `getGooglePosition`, `getGridSize`, `getSettings`, `getScore`
+- `Player`: `move`, `addPoint`, `resetPoints`, `setPosition`
+- `Position`: `create`, `move`, `equals`
+- `GooglePositionDomainService`: `nextPosition`
+- `GameStatus`: `pending`, `in-progress`, `paused`, `finished`, `stopped`
+- Domain events:
   - `GameStartedEvent`
   - `GoogleJumpedEvent`
   - `GoogleCaughtEvent`
@@ -229,141 +215,22 @@ graph TD
 
 #### Infrastructure Layer
 
-- `EventEmitterBus` (`infrastructure/event-emitter.bus.ts`)
-  - Реализация `IEventBus` на `node:events`.
-  - Методы: `publish(event)`, `on(eventName, callback)`.
-- `PostgresGameRepository` (`infrastructure/postgres-game.repository.ts`)
-  - Реализует `IGameSessionRepository`, `IGameQueryRepository`, `OnModuleInit`, `OnModuleDestroy`.
-  - Режимы:
-    - с `DATABASE_URL` + валидной схемой: чтение/запись в PostgreSQL
-    - без DB/без схемы: in-memory fallback
-  - Хранит `game_sessions_2.settings_json` (state snapshot) и upsert в `scores_2`.
-  - На старте проверяет схему (`players_2`, `game_sessions_2`, `game_events_2`, `scores_2`).
-
-### Диаграмма классов
-
-```mermaid
-classDiagram
-  class AppModule
-  class GameModule
-
-  class GameGateway {
-    -clientRoles: Map
-    -playerOwners
-    +handleConnection()
-    +handleDisconnect()
-    +onRequest()
-  }
-
-  class StartGameUseCase
-  class MovePlayerUseCase
-  class StopGameUseCase
-  class PauseGameUseCase
-  class ResumeGameUseCase
-  class SetSettingsUseCase
-  class GetSnapshotQueryHandler
-
-  class IGameSessionRepository
-  class IGameQueryRepository
-  class IEventBus
-
-  class PostgresGameRepository {
-    +getById()
-    +save()
-  }
-
-  class EventEmitterBus {
-    +publish()
-    +on()
-  }
-
-  class Game {
-    +start()
-    +stop()
-    +pause()
-    +resume()
-    +setSettings()
-    +move()
-    +catch()
-    +jumpGoogle()
-  }
-
-  class Player {
-    +move()
-    +addPoint()
-  }
-
-  class Position {
-    +create()
-    +move()
-    +equals()
-  }
-
-  class GooglePositionDomainService {
-    +nextPosition()
-  }
-
-  class GameStartedEvent
-  class GoogleJumpedEvent
-  class GoogleCaughtEvent
-  class GameFinishedEvent
-
-  AppModule --> GameModule
-  GameModule --> GameGateway
-  GameModule --> StartGameUseCase
-  GameModule --> MovePlayerUseCase
-  GameModule --> StopGameUseCase
-  GameModule --> PauseGameUseCase
-  GameModule --> ResumeGameUseCase
-  GameModule --> SetSettingsUseCase
-  GameModule --> GetSnapshotQueryHandler
-
-  GameGateway --> StartGameUseCase
-  GameGateway --> MovePlayerUseCase
-  GameGateway --> StopGameUseCase
-  GameGateway --> PauseGameUseCase
-  GameGateway --> ResumeGameUseCase
-  GameGateway --> SetSettingsUseCase
-  GameGateway --> GetSnapshotQueryHandler
-  GameGateway --> IGameSessionRepository
-  GameGateway --> EventEmitterBus
-
-  StartGameUseCase --> IGameSessionRepository
-  StartGameUseCase --> IEventBus
-  MovePlayerUseCase --> IGameSessionRepository
-  MovePlayerUseCase --> IEventBus
-  StopGameUseCase --> IGameSessionRepository
-  StopGameUseCase --> IEventBus
-  PauseGameUseCase --> IGameSessionRepository
-  PauseGameUseCase --> IEventBus
-  ResumeGameUseCase --> IGameSessionRepository
-  ResumeGameUseCase --> IEventBus
-  SetSettingsUseCase --> IGameSessionRepository
-  SetSettingsUseCase --> IEventBus
-  GetSnapshotQueryHandler --> IGameQueryRepository
-
-  PostgresGameRepository ..|> IGameSessionRepository
-  PostgresGameRepository ..|> IGameQueryRepository
-  EventEmitterBus ..|> IEventBus
-
-  Game --> Player
-  Game --> Position
-  Game --> GooglePositionDomainService
-  Game --> GameStartedEvent
-  Game --> GoogleJumpedEvent
-  Game --> GoogleCaughtEvent
-  Game --> GameFinishedEvent
-  Player --> Position
-```
+- `EventEmitterBus`
+  - реализация `IEventBus` на `node:events`
+- `PostgresGameRepository`
+  - реализует `IGameSessionRepository`, `IGameQueryRepository`
+  - режимы:
+    - PostgreSQL (если есть `DATABASE_URL` и схема)
+    - in-memory fallback (если БД/схема недоступны)
 
 ### Структура БД и зависимости
 
-Важно: текущая репозиторная реализация ожидает таблицы с суффиксом `_2`.
+Репозиторий ожидает таблицы с суффиксом `_2`:
 
-- `players_2` — игроки
-- `game_sessions_2` — сессии (`session_token`, `status`, `settings_json`)
-- `game_events_2` — события игры (используется как обязательная таблица схемы)
-- `scores_2` — очки игроков по сессии
+- `players_2`
+- `game_sessions_2`
+- `game_events_2`
+- `scores_2`
 
 ```mermaid
 erDiagram
@@ -384,7 +251,7 @@ erDiagram
 
 ### WebSocket (Socket.IO)
 
-Клиент отправляет событие `request` с payload:
+Клиент отправляет событие `request`:
 
 ```json
 { "type": "request", "requestId": "...", "procedure": "start", "payload": {} }
@@ -396,9 +263,9 @@ erDiagram
 { "type": "response", "requestId": "...", "procedure": "start", "result": { "status": "in-progress" } }
 ```
 
-Сервер рассылает широковещательные события:
+Сервер рассылает события:
 
-- `event` c `eventName: "change"` и полным snapshot
+- `event` c `eventName: "change"` и snapshot
 - `game-started`
 - `google-jumped`
 - `google-caught`
@@ -417,12 +284,7 @@ npm run start:back
 npm run start:front
 ```
 
-Для локальной разработки обычно два терминала:
-
-1. `npm run start:back`
-2. `npm run start:front`
-
-### Тесты
+### Команды тестов
 
 ```bash
 npm test
@@ -431,11 +293,15 @@ npm run test:integration
 npm run test:e2e
 ```
 
-Покрытие по уровням:
+### Фактический статус проверок (проверено локально)
 
-- `unit`: value object и utility-поведение.
-- `integration`: поведение игровой модели на уровне сценариев.
-- `e2e`: сетевое взаимодействие клиента и сервера.
+- `npm run build:ts` — проходит.
+- `npm run lint` — проходит (есть warnings по import order/type imports, но без errors).
+- `npm run check:migrations` — проходит.
+- `npm test` — проходит.
+- `npm run test:unit` — проходит.
+- `npm run test:integration` — проходит.
+- `npm run test:e2e` — проходит.
 
 ---
 
@@ -447,9 +313,13 @@ npm run test:e2e
 npm run lint
 npm run lint:fix
 npm run check:migrations
+npm run build:ts
 ```
 
-`check:migrations` проверяет наличие SQL-миграции и обязательных фрагментов таблиц `_2`.
+Примечание по миграциям:
+
+- Скрипт `check:migrations` валидирует `back/migrations/001_init_2.sql`.
+- Миграция присутствует и содержит обязательные фрагменты таблиц `_2`.
 
 ---
 
@@ -457,14 +327,14 @@ npm run check:migrations
 
 ### Почему такой деплой
 
-- **GitHub Pages**: простой хостинг статического фронтенда.
-- **Render**: стабильный runtime для NestJS + Socket.IO.
-- **Neon**: managed PostgreSQL для production-окружения.
+- **GitHub Pages**: хостинг статического фронтенда.
+- **Render**: runtime для NestJS + Socket.IO.
+- **Neon**: managed PostgreSQL для production.
 
 ### Backend (Render)
 
 1. Создать сервис из репозитория.
-2. Указать переменные окружения:
+2. Указать env:
    - `NODE_ENV=production`
    - `DATABASE_URL`
    - `PORT`
@@ -485,14 +355,6 @@ window.GAME_WS_URL = "wss://<your-render-service>.onrender.com";
 
 ## 8) Скриншоты
 
-### Gameplay start
+В репозитории сейчас нет папки `docs/screenshots` и PNG-скриншотов.
 
-![Gameplay start](./docs/screenshots/gameplay-start.png)
-
-### Gameplay win state
-
-![Gameplay win state](./docs/screenshots/gameplay-win.png)
-
-### Gameplay (main)
-
-![Gameplay main](./docs/screenshots/gameplay.png)
+Доступные фронтовые ассеты находятся в `docs/img` и `docs/img/icons`.

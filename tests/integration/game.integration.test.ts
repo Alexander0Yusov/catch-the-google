@@ -5,81 +5,61 @@
  * Комментарии оставлены намеренно подробно для портфолио-защиты.
  */
 import { describe, expect, it } from "vitest";
-import { Game } from "../../game.js";
-import { EventEmitter } from "../../observer/EventEmitter.js";
+import { Game } from "../../src/modules/game/domain/entities/game.entity.js";
+import { GameStatus } from "../../src/modules/game/domain/enums/game-status.enum.js";
+import { Position } from "../../src/modules/game/domain/value-objects/position.value-object.js";
 
-function samePosition(a, b) {
-  return a.x === b.x && a.y === b.y;
-}
+function createGame() {
+  const gridSize = { columns: 4, rows: 4 };
 
-function tryMovePlayer1(game) {
-  const before = game.player1.position.clone();
-  game.movePlayer1Up();
-  if (!samePosition(before, game.player1.position)) return true;
-  game.movePlayer1Down();
-  if (!samePosition(before, game.player1.position)) return true;
-  game.movePlayer1Left();
-  if (!samePosition(before, game.player1.position)) return true;
-  game.movePlayer1Right();
-  if (!samePosition(before, game.player1.position)) return true;
-  return false;
-}
-
-function movePlayer2AllDirections(game) {
-  game.movePlayer2Up();
-  game.movePlayer2Down();
-  game.movePlayer2Left();
-  game.movePlayer2Right();
+  return new Game({
+    gridSize,
+    player1Start: Position.create(1, 1, gridSize),
+    player2Start: Position.create(4, 4, gridSize),
+    googleStart: Position.create(2, 2, gridSize),
+    settings: {
+      pointsToWin: 3,
+      googleJumpInterval: 1000,
+      gameDurationMs: 30000,
+      turnDelayMs: 0,
+    },
+  });
 }
 
 describe("Game integration", () => {
-  it("start creates unique units and switches status", async () => {
-    const game = new Game(new EventEmitter());
-    game.settings = {
-      gridSize: { columns: 4, rows: 4 },
-      googleJumpInterval: 10000,
-    };
+  it("start switches status to in-progress", () => {
+    const game = createGame();
 
-    await game.start();
+    game.start();
 
-    expect(game.status).toBe("in-progress");
-
-    const p1 = game.player1.position;
-    const p2 = game.player2.position;
-    const google = game.google.position;
-
-    expect(p1.equal(p2)).toBe(false);
-    expect(p1.equal(google)).toBe(false);
-    expect(p2.equal(google)).toBe(false);
-
-    await game.stop();
+    expect(game.getStatus()).toBe(GameStatus.InProgress);
   });
 
-  it("turn order and turn delay are enforced", async () => {
-    const game = new Game(new EventEmitter());
-    game.settings = {
-      gridSize: { columns: 5, rows: 5 },
-      googleJumpInterval: 10000,
-      turnDelayMs: 200,
-      firstTurnPlayerId: 1,
-    };
+  it("players can move one after another without turn queue", () => {
+    const game = createGame();
+    game.start();
 
-    await game.start();
+    game.move(1, "right");
+    game.move(2, "left");
 
-    const beforeP2 = game.player2.position.clone();
-    movePlayer2AllDirections(game);
-    expect(game.player2.position.equal(beforeP2)).toBe(true);
+    expect(game.getPlayer(1).position.equals(Position.create(2, 1, game.getGridSize()))).toBe(
+      true
+    );
+    expect(game.getPlayer(2).position.equals(Position.create(3, 4, game.getGridSize()))).toBe(
+      true
+    );
+  });
 
-    const p1Moved = tryMovePlayer1(game);
-    expect(p1Moved).toBe(true);
+  it("catch awards point and keeps game in-progress before pointsToWin", () => {
+    const game = createGame();
+    game.start();
 
-    const afterP2Attempt = game.player2.position.clone();
-    movePlayer2AllDirections(game);
-    // p2 не может ходить мгновенно после p1, пока не пройдет turnDelayMs
-    expect(game.player2.position.equal(afterP2Attempt)).toBe(true);
+    game.setGooglePosition(Position.create(2, 1, game.getGridSize()));
+    game.move(1, "right");
+    const caught = game.catch(1);
 
-    await game.stop();
+    expect(caught).toBe(true);
+    expect(game.getScore()[1].points).toBe(1);
+    expect(game.getStatus()).toBe(GameStatus.InProgress);
   });
 });
-
-

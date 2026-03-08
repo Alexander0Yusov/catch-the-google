@@ -5,23 +5,22 @@
  * Комментарии оставлены намеренно подробно для портфолио-защиты.
  */
 import { describe, expect, it } from "vitest";
-import { Position } from "../../domain/Position.js";
+import { Position } from "../../src/modules/game/domain/value-objects/position.value-object.js";
 
 describe("Position unit", () => {
-  it("clone returns independent instance with same coordinates", () => {
-    const source = new Position(2, 3);
-    const cloned = source.clone();
+  it("create validates coordinates and creates immutable position", () => {
+    const source = Position.create(2, 3, { columns: 4, rows: 4 });
 
-    expect(cloned).not.toBe(source);
-    expect(cloned.equal(source)).toBe(true);
+    expect(source.x).toBe(2);
+    expect(source.y).toBe(3);
   });
 
-  it("equal returns false for different coordinates", () => {
-    const a = new Position(1, 1);
-    const b = new Position(2, 1);
+  it("move returns next position and equals compares by value", () => {
+    const start = Position.create(1, 1, { columns: 4, rows: 4 });
+    const moved = start.move({ x: 1, y: 0 }, { columns: 4, rows: 4 });
+    const same = Position.create(2, 1, { columns: 4, rows: 4 });
 
-    expect(a.equal(b)).toBe(false);
+    expect(start.equals(moved)).toBe(false);
+    expect(moved.equals(same)).toBe(true);
   });
 });
-
-
